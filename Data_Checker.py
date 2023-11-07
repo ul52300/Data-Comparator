@@ -1037,7 +1037,6 @@ while True:
                 if "GSM" in group:
                     find_slots = para_index[para_index.find("TN"):para_index.find(")")].strip()
                     slots_on_plot = find_slots[3:]
-                    print(slots_on_plot)
                     if slots_on_plot == "0":
                         slot_num = "1"
                     elif slots_on_plot == "0-1":
@@ -1277,10 +1276,11 @@ while True:
             elif event_match == "Prepare to Be Sad":
                 match_xlsx_docx = [] # Initialize list to hold the excel and plot data.
                 # Compare data from excel and plots.
+                print(len(data_excel), len(data_plot))
                 for data_1, data_2, index in zip(data_excel, data_plot, range(0, len(data_excel))):
                     one_g_meas_excel, one_g_meas_plot = data_1[6], data_2[6]
                     ten_g_meas_excel, ten_g_meas_plot = data_1[7], data_2[7]
-                    match_xlsx_docx.append(["{}".format(index + 1), "Yes" if (one_g_meas_excel == one_g_meas_plot and ten_g_meas_excel == ten_g_meas_plot) else "No"])
+                    match_xlsx_docx.append(["{}".format(index+1), "Yes" if (one_g_meas_excel == one_g_meas_plot and ten_g_meas_excel == ten_g_meas_plot) else "No"])
                 window_match["-data_table_3-"].update(values = match_xlsx_docx)
     elif event == '-hide-':
         '''

@@ -4,12 +4,32 @@ Version: 1.0.0
 
 This programs function is to compare the data from the plots and excel sheets and too see if they match.
 
+This program DOES support the following technologies:
+- GSM (GPRS only)
+- W-CDMA (Rel 99 only)
+- LTE (QPSK only)
+- FR1 5G NR (DFT-s-OFDM pi/2 BPSK only)
+- Bluetooth (GFSK (BDR) only)
+- WLAN (2.4 GHz and 5 GHz all modes)
+
+This program DOES NOT support the following technologies:
+- NFC
+- FR2 5G NR
+- Any mmWave (Power density) testing
+- WLAN (6E and 7)
+- UWB (lol)
+
+
+----
+
 
 # Table of Contents
 - [HOW TO USE](#how-to-use)
   - [1) LOADING IN AN SHEET FROM EXCEL:](#1-loading-in-an-sheet-from-excel)
   - [2) LOADING IN A MICROSOFT DOCX:](#2-loading-in-a-microsoft-docx)
   - [3) BOTH EXCEL AND DOCX LOADED:](#1a-and-2a-both-excel-and-docx-loaded)
+- [1) COMPARE (In Beta)](1-compare-in-beta)
+- [2) HIDE/UNHIDE](2-hide-unhide)
 
 
 ----
@@ -109,4 +129,46 @@ After hitting **'Prepare to Be Sad'**, the table will now fill up with the plot 
 
 ![image](https://github.com/ul52300/Data-Comparator/assets/148300863/499df448-498b-41b3-b29d-b9c6f7f0da1a)
 
-**NOTE: You'll see, so**
+**NOTE: You'll see that there is somewhat of an error with this comparison. Notice that there is 18 tests in the Excel, but there is 17 plots, this means one of two things: (1) The person added extra data to the Excel or (2) The person forgot to plot the data. However, you'll see that it still says 17 plots and they all match. This happens because the program is comparing all the data that matches, but if the number of tests for both don't match up, well you already found an error, hence why all the comparisons say 'Yes'. In this case just remove the outlier and just compare the tests that exists in both documents.**
+
+**Please keep in mind that you cannot interact with the main window when this window is open!**
+
+
+----
+
+
+### 2) HIDE/UNHIDE
+
+Hitting **'Hide/Unhide'** will remove any unnessesary columns for whatever technology that you are viewing currently. This must be done AFTER you have loaded your data in.
+
+Here is the unfiltered tables
+![image](https://github.com/ul52300/Data-Comparator/assets/148300863/ba7bf2e8-6ab2-4199-b7e2-bf6f8b0e2696)
+
+and here is the filtered tables
+![image](https://github.com/ul52300/Data-Comparator/assets/148300863/63f0229f-e04d-42dd-91ab-7ff42bddffa1)
+
+Notice the removal of 'RB Allocation', 'RB Offset', and 'Max Area (W/kg)'. These are NOT needed for GSM.
+
+The following is a list of the technologies that we currently test and what **'Hide/Unhide'** removes:
+- GSM removes:
+  - RB Allocation
+  - RB Offset
+  - Max Area (W/kg)
+- W-CDMA removes:
+  - RB Allocation
+  - RB Offset
+  - Max Area (W/kg)
+- LTE removes:
+  - Max Area (W/kg)
+- FR1 (DFT-s-OFDM pi/2 BPSK)
+- WLAN 2.4/5 GHz removes:
+  - RB Allocation
+  - RB Offset
+- Bluetooth removes:
+  - RB Allocation
+  - RB Offset
+  - Max Scan (W/kg)
+- NFC (Not supported by this program :c)
+- WLAN 6E (Not supported by this program :c)
+- FR2 (Not supported by this program :c)
+- UWB (Not supported by this program :c)

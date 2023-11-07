@@ -6,7 +6,7 @@ This programs function is to compare the data from the plots and excel sheets an
 
 
 ## Table of Contents
-[1) How to Use][#header]
+[How to Use][#how-to-use]
 
 
 ----

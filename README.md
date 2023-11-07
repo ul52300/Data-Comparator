@@ -161,6 +161,7 @@ The following is a list of the technologies that we currently test and what **'H
 - LTE removes:
   - Max Area (W/kg)
 - FR1 (DFT-s-OFDM pi/2 BPSK)
+  - Max Area (W/kg)
 - WLAN 2.4/5 GHz removes:
   - RB Allocation
   - RB Offset

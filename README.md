@@ -9,7 +9,7 @@ This programs function is to compare the data from the plots and excel sheets an
 - [HOW TO USE](#how-to-use)
   - [1) LOADING IN AN SHEET FROM EXCEL:](#1-loading-in-an-sheet-from-excel)
   - [2) LOADING IN A MICROSOFT DOCX:](#2-loading-in-a-microsoft-docx)
-  - [(1a and 2a) BOTH EXCEL AND DOCX LOADED:](#1a-and-2a-both-excel-and-docx-loaded)
+  - [3) BOTH EXCEL AND DOCX LOADED:](#1a-and-2a-both-excel-and-docx-loaded)
 
 
 ----
@@ -85,11 +85,28 @@ This will be the final result if everything was entered correctly:
 ----
 
 
-### (1a and 2a) BOTH EXCEL AND DOCX LOADED:
+### 3) BOTH EXCEL AND DOCX LOADED:
 
 Here is what the tables look like when both Excel and Microsoft Docx are loaded:
 
 ![image](https://github.com/ul52300/Data-Comparator/assets/148300863/a160cdf0-78ce-486f-8a84-6fc983f5bf9d)
 
+From here you can compare the two and see if there are any discrepancies.
+
 
 ----
+
+
+## OTHER FEATURES
+
+### 1) COMPARE (In Beta)
+
+Hitting **'Compare'** opens the following window:
+
+![image](https://github.com/ul52300/Data-Comparator/assets/148300863/77e2070c-f12b-42ce-bf32-a729140ff919)
+
+After hitting **'Prepare to Be Sad'**, the table will now fill up with the plot numbers and whether each plot matches the 1g and 10g SAR.
+
+![image](https://github.com/ul52300/Data-Comparator/assets/148300863/499df448-498b-41b3-b29d-b9c6f7f0da1a)
+
+**NOTE: You'll see, so**

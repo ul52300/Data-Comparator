@@ -4,6 +4,11 @@ Version: 1.0.0
 
 This programs function is to compare the data from the plots and excel sheets and too see if they match.
 
+
+## Table of Contents
+[1) How to Use][#header]
+
+
 ----
 
 ## HOW TO USE

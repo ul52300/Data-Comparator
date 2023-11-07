@@ -53,3 +53,23 @@ This will be the final result if everything was entered correctly:
 
 By clicking on **'Browse'** you can browse your Windows filebrowser to find the Microsoft Docx with the data that you want to check.
 
+![image](https://github.com/ul52300/Data-Comparator/assets/148300863/75442aba-d591-4be9-81c7-09107464943e)
+
+![image](https://github.com/ul52300/Data-Comparator/assets/148300863/bb9059a8-d2fe-4a2b-b1f3-cbb17b3a100e)
+
+**(NOTE: The Microsoft Docx with the plots MUST be formatted to the standard way that the SAR department plots data.)**
+
+Once you have selected your Microsoft Docx you can now load in the data into the table. There is no need to load the technology and band since this is all in the plot.
+
+![image](https://github.com/ul52300/Data-Comparator/assets/148300863/7c68bfd7-f10a-4a18-84e7-6ebe22e3e3f0)
+
+This will be the final result if everything was entered correctly:
+
+![image](https://github.com/ul52300/Data-Comparator/assets/148300863/fd401924-558d-444a-b96f-9c3858588f5b)
+
+----
+
+Here is what the tables look like when both Excel and Microsoft Docx are loaded:
+
+![image](https://github.com/ul52300/Data-Comparator/assets/148300863/a160cdf0-78ce-486f-8a84-6fc983f5bf9d)
+

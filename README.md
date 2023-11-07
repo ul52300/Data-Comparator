@@ -3,6 +3,7 @@
 Version: 1.0.0
 
 This programs function is to compare the data from the plots and excel sheets and too see if they match.
+----
 
 ## HOW TO USE
 
@@ -11,7 +12,7 @@ When the program is opened, you will be greated with the bottom picture:
 
 You are able to select the Excel sheet and Microsoft Docx individually if you want to just check either or both.
 
-
+----
 
 ### 1) Loading in an Sheet from Excel:
 
@@ -43,3 +44,12 @@ After you have entered BOTH the Excel and loaded in the sheet you want to see, y
 This will be the final result if everything was entered correctly:
 
 ![image](https://github.com/ul52300/Data-Comparator/assets/148300863/1b98b619-c9b2-4ea7-812f-596671199f3d)
+
+----
+
+### 2) Loading in a Microsoft Docx:
+
+![image](https://github.com/ul52300/Data-Comparator/assets/148300863/4de7fad7-9717-4fc7-aa83-f8c814cea0b8)
+
+By clicking on **'Browse'** you can browse your Windows filebrowser to find the Microsoft Docx with the data that you want to check.
+

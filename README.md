@@ -7,6 +7,7 @@ This programs function is to compare the data from the plots and excel sheets an
 
 ## Table of Contents
 - [HOW TO USE](#how-to-use)
+  - [1) Loading in an Sheet from Excel:](#1-loading-in-an-sheet-from-excel)
 
 
 ----

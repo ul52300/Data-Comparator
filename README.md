@@ -5,12 +5,15 @@ Version: 1.0.0
 This programs function is to compare the data from the plots and excel sheets and too see if they match.
 
 
-## Table of Contents
+# Table of Contents
 - [HOW TO USE](#how-to-use)
-  - [1) Loading in an Sheet from Excel:](#1-loading-in-an-sheet-from-excel)
+  - [1) LOADING IN AN SHEET FROM EXCEL:](#1-loading-in-an-sheet-from-excel)
+  - [2) LOADING IN A MICROSOFT DOCX:](#2-loading-in-a-microsoft-docx)
+    - [BOTH EXCEL AND DOCX LOADED:](#both-excel-and-docx-loaded)
 
 
 ----
+
 
 ## HOW TO USE
 
@@ -19,9 +22,11 @@ When the program is opened, you will be greated with the bottom picture:
 
 You are able to select the Excel sheet and Microsoft Docx individually if you want to just check either or both.
 
+
 ----
 
-### 1) Loading in an Sheet from Excel:
+
+### 1) LOADING IN AN SHEET FROM EXCEL:
 
 ![image](https://github.com/ul52300/Data-Comparator/assets/148300863/5b59a9f5-e28e-4a36-95f3-9f0ffc2bd103)
 
@@ -52,9 +57,11 @@ This will be the final result if everything was entered correctly:
 
 ![image](https://github.com/ul52300/Data-Comparator/assets/148300863/1b98b619-c9b2-4ea7-812f-596671199f3d)
 
+
 ----
 
-### 2) Loading in a Microsoft Docx:
+
+### 2) LOADING IN A MICROSOFT DOCX:
 
 ![image](https://github.com/ul52300/Data-Comparator/assets/148300863/4de7fad7-9717-4fc7-aa83-f8c814cea0b8)
 
@@ -74,9 +81,15 @@ This will be the final result if everything was entered correctly:
 
 ![image](https://github.com/ul52300/Data-Comparator/assets/148300863/fd401924-558d-444a-b96f-9c3858588f5b)
 
+
 ----
+
+
+#### BOTH EXCEL AND DOCX LOADED:
 
 Here is what the tables look like when both Excel and Microsoft Docx are loaded:
 
 ![image](https://github.com/ul52300/Data-Comparator/assets/148300863/a160cdf0-78ce-486f-8a84-6fc983f5bf9d)
 
+
+----

@@ -9,7 +9,7 @@ This programs function is to compare the data from the plots and excel sheets an
 - [HOW TO USE](#how-to-use)
   - [1) LOADING IN AN SHEET FROM EXCEL:](#1-loading-in-an-sheet-from-excel)
   - [2) LOADING IN A MICROSOFT DOCX:](#2-loading-in-a-microsoft-docx)
-    - [BOTH EXCEL AND DOCX LOADED:](#both-excel-and-docx-loaded)
+  - [(1a and 2a) BOTH EXCEL AND DOCX LOADED:](#1a-and-2a-both-excel-and-docx-loaded)
 
 
 ----
@@ -85,7 +85,7 @@ This will be the final result if everything was entered correctly:
 ----
 
 
-#### BOTH EXCEL AND DOCX LOADED:
+### (1a and 2a) BOTH EXCEL AND DOCX LOADED:
 
 Here is what the tables look like when both Excel and Microsoft Docx are loaded:
 

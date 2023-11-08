@@ -23,6 +23,7 @@ Comparator:
     - Also split 1-g and 10-g measured SAR values
   - Displays the same "Yes" or "No" as with the previous iteration.
 - Able to interact with the main window when using the 'Comparator' window.
+
 Other Changes:
 - Cleaned up some code regarding the comparator.
 - Cleaned up some code regarding the making of the individual windows.

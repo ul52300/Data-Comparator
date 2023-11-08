@@ -1345,10 +1345,8 @@ while True:
                     # When 50% of the RBs are allocated.
                     if check_half_rb:
                         rb_allocation = str(math.floor(full_rb / 2)) # Half of the number of RBs is being allocated.
-                        if any(position in para_index for position in ["RBPosition:Low", "RBPosition:Mid"]): # Is the RB position "Low" or "Mid"?
+                        if any(position in para_index for position in ["RBPosition:Low", "RBPosition:Mid", "RBPosition:High"]): # Is the RB position "Low", "Mid", or "High"?
                             rb_offset = rb_positions[str(int(bw_hz))]["LTE"][num_rb][rb_position]            # Grab RB offset from dictionary. 
-                        else:
-                            rb_offset = str(full_rb - 1) # Otherwise offset by 99% of RBs.
                     # When 100% of the RBs are allocated.
                     elif check_full_rb:
                         rb_allocation = str(full_rb) # 100% of the RB is being allocated.
@@ -1475,7 +1473,7 @@ while True:
             if any(technology in group for technology in ["GSM", "WCDMA", "WLAN", "Bluetooth"]):
                 displaycolumns.remove('RB Allocation')
                 displaycolumns.remove('RB Offset')    
-            if "WLAN" not in group:
+            if "WLAN" != group:
                 displaycolumns.remove('Max Area (W/kg)')
             window['-data_table_3-'].ColumnsToDisplay = displaycolumns
             window['-data_table_3-'].Widget.configure(displaycolumns=displaycolumns)

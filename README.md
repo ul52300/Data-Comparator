@@ -1,32 +1,22 @@
 # Data-Comparator
 
-**Version: 1.0.2**
+**Version: 1.0.3**
 
 Changelog:
 
-Liquid Checker:
-- Merged Liquid Checker with this program.
-  - Able to interact with the main window when this window is open.
-    - This means you don't have to close the window in order to update your Excel or Microsoft Docx.
-
+Main Window:
+- Removed the 'Hide/Unhide' button.
+  - Instead of manually hiding what isn't neccessary per technology, the program will do it automatically!
+- Fixed some logic for getting the 'Mode' for WLAN, it should now be working as intended.
+- I know some people had issues where the window on startup would go offscreen, thus making it impossible to use.
+  - This potentially has been fixed (?). Test it out and see if this fix worked as it works fine on my environment.
+ 
 Comparator:
-- Added additional checks, to EVERYTHING that is within the table.
-  - Specifically what was added:
-    - RF Exposure Condition
-    - Mode
-    - Test Position
-    - Ch #.
-    - Freq. (MHz)
-    - RB Allocation
-    - RB Offset
-    - Max Area (W/kg)
-    - Also split 1-g and 10-g measured SAR values
-  - Displays the same "Yes" or "No" as with the previous iteration.
-- Able to interact with the main window when using the 'Comparator' window.
+- Added the same automatic hide function to this. It work once you have loaded data in and pressed 'Prepare to Be Sad'.
 
 Other Changes:
-- Cleaned up some code regarding the comparator.
-- Cleaned up some code regarding the making of the individual windows.
+- Removed the 'Hide/Unhide' code.
+- Added some stand-in code for a future addition to this program.
 
 
 ----

@@ -1278,8 +1278,8 @@ while True:
                 # Compare data from excel and plots.
                 print(len(data_excel), len(data_plot))
                 for data_1, data_2, index in zip(data_excel, data_plot, range(0, len(data_excel))):
-                    one_g_meas_excel, one_g_meas_plot = data_1[6], data_2[6]
-                    ten_g_meas_excel, ten_g_meas_plot = data_1[7], data_2[7]
+                    one_g_meas_excel, one_g_meas_plot = data_1[9], data_2[9]
+                    ten_g_meas_excel, ten_g_meas_plot = data_1[10], data_2[10]
                     match_xlsx_docx.append(["{}".format(index+1), "Yes" if (one_g_meas_excel == one_g_meas_plot and ten_g_meas_excel == ten_g_meas_plot) else "No"])
                 window_match["-data_table_3-"].update(values = match_xlsx_docx)
     elif event == '-hide-':

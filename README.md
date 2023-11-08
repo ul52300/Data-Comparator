@@ -6,7 +6,7 @@ Changelog:
 
 Main Window:
 - Removed the 'Hide/Unhide' button.
-  - Instead of manually hiding what isn't neccessary per technology, the program will do it automatically!
+  - Instead of manually hiding what isn't neccesary per technology, the program will do it automatically!
 - Fixed some logic for getting the 'Mode' for WLAN, it should now be working as intended.
 - I know some people had issues where the window on startup would go offscreen, thus making it impossible to use.
   - This potentially has been fixed (?). Test it out and see if this fix worked as it works fine on my environment.

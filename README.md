@@ -7,6 +7,7 @@ Changelog:
 Liquid Checker:
 - Merged Liquid Checker with this program.
   - Able to interact with the main window when this window is open.
+    - This means you don't have to close the window in order to update your Excel or Microsoft Docx.
 Comparator:
 - Added additional checks, to EVERYTHING that is within the table.
   - Specifically what was added:
@@ -21,7 +22,6 @@ Comparator:
     - Also split 1-g and 10-g measured SAR values
   - Displays the same "Yes" or "No" as with the previous iteration.
 - Able to interact with the main window when using the 'Comparator' window.
-  - This means you don't have to close the window in order to update your Excel or Microsoft Docx.
 Other Changes:
 - Cleaned up some code regarding the comparator.
 - Cleaned up some code regarding the making of the individual windows.

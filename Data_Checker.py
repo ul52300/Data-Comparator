@@ -5,7 +5,7 @@ import math
 from docx import *
 from copy import deepcopy
 # Program: Data_Checker.py
-# Version: 1.0.2
+# Version: 1.0.3
 # Description: This program is used in order to display data onto a GUI inorder for the data to be compared to see if they match or not.
 # Functions:
 #   (1) To read Excel sheets and Microsoft Documents.
@@ -20,6 +20,8 @@ window = sg.FlexForm('Data Checker', default_button_element_size = (5,2), auto_s
 # Column global variables.
 COL_HEADINGS = ["Plot #", "RF Exposure Condition", "Mode", "Test Position", "Ch #.", "Freq. (MHz)", "RB Allocation", "RB Offset", "Max Area (W/kg)", "1-g Meas. (W/kg)", "10-g Meas. (W/kg)"]
 COL_WIDTHS = [len(COL_HEADINGS[0]), len(COL_HEADINGS[1])-4, len(COL_HEADINGS[2])+16, len(COL_HEADINGS[3]), len(COL_HEADINGS[4])+5, len(COL_HEADINGS[5]), len(COL_HEADINGS[6]), len(COL_HEADINGS[7]), len(COL_HEADINGS[8]), len(COL_HEADINGS[9]), len(COL_HEADINGS[10])]
+COL_HEADINGS_PWR_DRIFT = ["Plot #", "Power Drift (dB)", "Within ±0.2 dB?"]
+COL_WIDTHS_PWR_DRIFT = [len(COL_HEADINGS_PWR_DRIFT[0]), len(COL_HEADINGS_PWR_DRIFT[1]), COL_HEADINGS_PWR_DRIFT[2]]
 
 # Font global variables.
 NORMAL_FONT = ("Times New Roman", 12)
@@ -46,7 +48,8 @@ EXTREMITY_COMBO_SIZE = (25,1)
 TABLE_NUM_ROWS = 18
 
 # Flag for when hide button is pressed.
-HIDE_COUNTER = 0
+HIDE_COUNTER_MAIN = 0
+HIDE_COUNTER_COMPARATOR = 0
 
 # This is the main window.
 def make_win1():
@@ -153,12 +156,12 @@ def make_win1():
                         font=BUTTON_FONT,
                         button_color="white",
                         tooltip="Press this to open a window to compare the 1-g and 10-g data from both tables."),
-            sg.Button("Hide/Unhide",
-                        key="-hide-",
-                        size=CONFIRM_BUTTON_SIZE,
-                        font=BUTTON_FONT,
-                        button_color="white",
-                        tooltip="Press this to hide unnessesary columns"),
+            # sg.Button("Hide/Unhide",
+            #             key="-hide-",
+            #             size=CONFIRM_BUTTON_SIZE,
+            #             font=BUTTON_FONT,
+            #             button_color="white",
+            #             tooltip="Press this to hide unnessesary columns"),
             sg.Button("Liquid Checker",
                       key="-liquid_check-",
                       size=CONFIRM_BUTTON_SIZE,
@@ -170,7 +173,7 @@ def make_win1():
                     size=(20,1),
                     font=BUTTON_FONT)]  
     ]
-    return(sg.Window("Data Checker", layout, finalize=True))   # Display the window.
+    return(sg.Window("Data Checker", layout, location=(0,0), finalize=True))   # Display the window.
 
 # This is the liquid check window.
 def make_win2():
@@ -225,6 +228,7 @@ def make_win2():
     ]
     return(sg.Window("Liquid Checker", layout, finalize=True))  # Display the window.
 
+# This is the comparator window.
 def make_win3():
     sg.theme('DarkBlack') # Theme
     layout = [
@@ -241,7 +245,24 @@ def make_win3():
                     font=("Times New Roman", 12, "bold"),
                     tooltip="Press to compare the data.")]]
     return(sg.Window("Sadness?", layout, finalize=True))
-     
+
+def make_win4():
+    sg.theme('DarkBlack') # Theme
+    layout = [
+             [sg.Table(values="",
+                    headings=COL_HEADINGS,
+                    key="-data_table_3-",
+                    justification='center',
+                    col_widths=COL_WIDTHS,
+                    num_rows=18,
+                    auto_size_columns=False,
+                    enable_events=True)],
+            [sg.Button("Prepare to Be Sad",
+                    size=(30,1),
+                    font=("Times New Roman", 12, "bold"),
+                    tooltip="Press to compare the data.")]]
+    return(sg.Window("Sadness?", layout, finalize=True))    
+
 def append_data(match_list, excel, plot):
     for data_1, data_2, index in zip(excel, plot, range(0, len(data_excel))):
         rf_exposure_cond_excel, rf_exposure_cond_plot = data_1[1].lower(), data_2[1].lower()
@@ -1003,6 +1024,24 @@ while True:
         
         df_excel = data       
         data_excel = df_excel # Used for comparison purposes.
+
+        '''
+            Notes about this section:
+            The purpose of this section is to hide the columns on the table that are unnessesary when checking certain technologies. I.E. RB Allocation, RB Offset, and Max Area Scan.
+        '''
+        try:
+            displaycolumns = deepcopy(COL_HEADINGS) # Creating a deepcopy as to not override the original.
+            if any(technology in group for technology in ["GSM", "WCDMA", "WLAN", "Bluetooth"]):
+                displaycolumns.remove('RB Allocation')
+                displaycolumns.remove('RB Offset')    
+            if "WLAN" not in group:
+                displaycolumns.remove('Max Area (W/kg)')
+            window['-data_table_1-'].ColumnsToDisplay = displaycolumns
+            window['-data_table_2-'].ColumnsToDisplay = displaycolumns
+            window['-data_table_1-'].Widget.configure(displaycolumns=displaycolumns)
+            window['-data_table_2-'].Widget.configure(displaycolumns=displaycolumns)
+        except:
+            continue
         
         window["-data_table_1-"].update(values = data)
         
@@ -1087,7 +1126,7 @@ while True:
                         
                     # Extend current sublist of 'table_1' with max area scan, 1-g measured, 10-g measured.
                     if sublist_start < len(table_1):
-                        if group == "WLAN":
+                        if "WLAN" in group:
                             table_1[sublist_start].extend(["{:.3f}".format(round(float(max_area_scan_1g), 3))])
                         
                         if zoom_meas_1g != "N/A" and zoom_meas_10g != "N/A":
@@ -1178,7 +1217,9 @@ while True:
                 elif "FR1" in group:
                     mode = "DFT-s-OFDM π/2 BPSK"
                 elif "WLAN" in group:
-                    mode = para_index[para_index.find("802.11"):(para_index.find("802.11")+len("802.11")+3)].strip()
+                    for check_letter in ["802.11b", "802.11g", "802.11n", "802.11a", "802.11ac", "802.11ax", "802.11be"]:
+                        if check_letter in para_index:
+                            mode = para_index[para_index.find("802.11"):(para_index.find("802.11")+len("{}".format(check_letter)))].strip()
                 elif "Bluetooth" in group:
                     mode = "GFSK (BDR)"
 
@@ -1363,6 +1404,24 @@ while True:
             
         data_plot = df_plot # Used for comparison purposes.
         
+        '''
+            Notes about this section:
+            The purpose of this section is to hide the columns on the table that are unnessesary when checking certain technologies. I.E. RB Allocation, RB Offset, and Max Area Scan.
+        '''
+        try:
+            displaycolumns = deepcopy(COL_HEADINGS) # Creating a deepcopy as to not override the original.
+            if any(technology in group for technology in ["GSM", "WCDMA", "WLAN", "Bluetooth"]):
+                displaycolumns.remove('RB Allocation')
+                displaycolumns.remove('RB Offset')    
+            if "WLAN" not in group:
+                displaycolumns.remove('Max Area (W/kg)')
+            window['-data_table_1-'].ColumnsToDisplay = displaycolumns
+            window['-data_table_2-'].ColumnsToDisplay = displaycolumns
+            window['-data_table_1-'].Widget.configure(displaycolumns=displaycolumns)
+            window['-data_table_2-'].Widget.configure(displaycolumns=displaycolumns)
+        except:
+            continue
+
         window["-data_table_2-"].update(values = df_plot) # Update bottom table.
     # NOTE: !!!!!!!!!!! OPTIONAL: If I have the time and willpower, try to figure this section out !!!!!!!!!!!
     # elif event == "-data_table_1-":
@@ -1372,25 +1431,6 @@ while True:
     # elif event == "-data_table_2-":
     #     print(values["-data_table_2-"])
     # NOTE: !!!!!!!!!!! OPTIONAL: If I have the time and willpower, try to figure this section out !!!!!!!!!!!
-    elif event == '-hide-':
-        '''
-            Notes about this section:
-            The purpose of this section is to hide the columns on the table that are unnessesary when checking certain technologies. I.E. RB Allocation, RB Offset, and Max Area Scan.
-        '''
-        displaycolumns = deepcopy(COL_HEADINGS) # Creating a deepcopy as to not override the original.
-        if HIDE_COUNTER == 0:
-            if any(technology in group for technology in ["GSM", "WCDMA", "WLAN", "Bluetooth"]):
-                displaycolumns.remove('RB Allocation')
-                displaycolumns.remove('RB Offset')    
-            if "WLAN" != group:
-                displaycolumns.remove('Max Area (W/kg)')
-            HIDE_COUNTER = 1
-        elif HIDE_COUNTER == 1:
-            HIDE_COUNTER = 0
-        window['-data_table_1-'].ColumnsToDisplay = displaycolumns
-        window['-data_table_2-'].ColumnsToDisplay = displaycolumns
-        window['-data_table_1-'].Widget.configure(displaycolumns=displaycolumns)
-        window['-data_table_2-'].Widget.configure(displaycolumns=displaycolumns)
     elif event == '-liquid_check-' and not window_liquid:
         window_liquid = make_win2()
     elif event == 'Calculate' and values["-target_1-"].strip() != '':
@@ -1426,8 +1466,24 @@ while True:
     elif event == "-compare-" and not window_compare:   
         window_compare = make_win3()
     elif event == "Prepare to Be Sad":
+        '''
+            Notes about this section:
+            The purpose of this section is to hide the columns on the table that are unnessesary when checking certain technologies. I.E. RB Allocation, RB Offset, and Max Area Scan.
+        '''
+        try:
+            displaycolumns = deepcopy(COL_HEADINGS) # Creating a deepcopy as to not override the original.
+            if any(technology in group for technology in ["GSM", "WCDMA", "WLAN", "Bluetooth"]):
+                displaycolumns.remove('RB Allocation')
+                displaycolumns.remove('RB Offset')    
+            if "WLAN" != group:
+                displaycolumns.remove('Max Area (W/kg)')
+            window['-data_table_3-'].ColumnsToDisplay = displaycolumns
+            window['-data_table_3-'].Widget.configure(displaycolumns=displaycolumns)
+        except:
+            continue
+
         match_xlsx_docx = [] # Initialize list to hold the excel and plot data.
-        
+
         # Compare data from excel and plots.
         match_xlsx_docx = append_data(match_xlsx_docx, data_excel, data_plot)
         window["-data_table_3-"].update(values = match_xlsx_docx)

@@ -1475,7 +1475,7 @@ while True:
             if any(technology in group for technology in ["GSM", "WCDMA", "WLAN", "Bluetooth"]):
                 displaycolumns.remove('RB Allocation')
                 displaycolumns.remove('RB Offset')    
-            if "WLAN" != group:
+            if "WLAN" not in group:
                 displaycolumns.remove('Max Area (W/kg)')
             window['-data_table_3-'].ColumnsToDisplay = displaycolumns
             window['-data_table_3-'].Widget.configure(displaycolumns=displaycolumns)

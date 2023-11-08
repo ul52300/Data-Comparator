@@ -1,6 +1,34 @@
 # Data-Comparator
 
-Version: 1.0.0
+**Version: 1.0.2**
+
+Changelog:
+
+Liquid Checker:
+- Merged Liquid Checker with this program.
+  - Able to interact with the main window when this window is open.
+Comparator:
+- Added additional checks, to EVERYTHING that is within the table.
+  - Specifically what was added:
+    - RF Exposure Condition
+    - Mode
+    - Test Position
+    - Ch #.
+    - Freq. (MHz)
+    - RB Allocation
+    - RB Offset
+    - Max Area (W/kg)
+    - Also split 1-g and 10-g measured SAR values
+  - Displays the same "Yes" or "No" as with the previous iteration.
+- Able to interact with the main window when using the 'Comparator' window.
+  - This means you don't have to close the window in order to update your Excel or Microsoft Docx.
+Other Changes:
+- Cleaned up some code regarding the comparator.
+- Cleaned up some code regarding the making of the individual windows.
+
+
+----
+
 
 This programs function is to compare the data from the plots and excel sheets and too see if they match.
 

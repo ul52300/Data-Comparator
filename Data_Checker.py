@@ -48,6 +48,7 @@ TABLE_NUM_ROWS = 18
 # Flag for when hide button is pressed.
 HIDE_COUNTER = 0
 
+# This is the main window.
 def make_win1():
     # The layout of the window.
     layout = [ # The browser for choosing an excel file to be parsed.
@@ -158,13 +159,131 @@ def make_win1():
                         font=BUTTON_FONT,
                         button_color="white",
                         tooltip="Press this to hide unnessesary columns"),
+            sg.Button("Liquid Checker",
+                      key="-liquid_check-",
+                      size=CONFIRM_BUTTON_SIZE,
+                      font=BUTTON_FONT,
+                      button_color="white",
+                      tooltip="Press this to open the Liquid Checker"),
             sg.Text("",
                     key="-FuckedUp-",
                     size=(20,1),
                     font=BUTTON_FONT)]  
     ]
+    return(sg.Window("Data Checker", layout, finalize=True))   # Display the window.
 
-    return(sg.Window("Data Checker", layout, location=(800,600), finalize=True))   # Display the window.
+# This is the liquid check window.
+def make_win2():
+    sg.theme('DarkBlack')
+    layout = [
+            [sg.Text("Choose a .prn file from SAR drive:", 
+                     size=(26,1), 
+                     font=('Times New Roman', 12, "bold")), 
+             sg.Input(
+                 key="-file_1-", 
+                 size=(10,1)), 
+             sg.FileBrowse(
+                 size=(10,1))],
+            [sg.Text("Input a target (MHz):", 
+                     size=(26,1), 
+                     font=('Times New Roman', 12, "bold")), 
+             sg.InputText(key="-target_1-", 
+                          size=(10,1))],
+            [sg.Txt('')],
+            [sg.Text("Results", 
+                     font=("Times New Roman", 14, "bold", "underline"))],
+            [sg.Text("Target Frequency (MHz):", 
+                     size=(20,1), 
+                     font=('Times New Roman', 12)), 
+             sg.Push(), 
+             sg.Text('',
+                     key='input_1',
+                     size=(10, 1), 
+                     font=('Times New Roman', 12, "bold"))],
+            [sg.Text("Permitivity:", 
+                     size=(20,1), 
+                     font=('Times New Roman', 12)), 
+             sg.Push(), 
+             sg.Text('',
+                     key='input_2',
+                     size=(10, 1), 
+                     font=('Times New Roman', 12, "bold"))],
+            [sg.Text("Conductivity:", 
+                     size=(20,1), 
+                     font=('Times New Roman', 12)), 
+             sg.Push(), 
+             sg.Text('',
+                     key='input_3',
+                     size=(10, 1), 
+                     font=('Times New Roman', 12, "bold"))],
+            [sg.Txt('')],
+            [sg.Button("Calculate", 
+                       size=(10,1)), 
+             sg.Push(), 
+             sg.Button("Quit", 
+                       size=(10,1))]
+    ]
+    return(sg.Window("Liquid Checker", layout, finalize=True))  # Display the window.
+
+def make_win3():
+    sg.theme('DarkBlack') # Theme
+    layout = [
+             [sg.Table(values="",
+                    headings=COL_HEADINGS,
+                    key="-data_table_3-",
+                    justification='center',
+                    col_widths=COL_WIDTHS,
+                    num_rows=18,
+                    auto_size_columns=False,
+                    enable_events=True)],
+            [sg.Button("Prepare to Be Sad",
+                    size=(30,1),
+                    font=("Times New Roman", 12, "bold"),
+                    tooltip="Press to compare the data.")]]
+    return(sg.Window("Sadness?", layout, finalize=True))
+     
+def append_data(match_list, excel, plot):
+    for data_1, data_2, index in zip(excel, plot, range(0, len(data_excel))):
+        rf_exposure_cond_excel, rf_exposure_cond_plot = data_1[1].lower(), data_2[1].lower()
+        mode_excel, mode_plot =                         data_1[2].lower(), data_2[2].lower()
+        test_position_excel, test_position_plot =       data_1[3].lower(), data_2[3].lower()
+        channel_num_excel, channel_num_plot =           data_1[4], data_2[4]
+        frequency_excel, frequency_plot =               data_1[5], data_2[5]
+        rb_allocation_excel, rb_allocation_plot =       data_1[6], data_2[6]
+        rb_offset_excel, rb_offset_plot =               data_1[7], data_2[7]
+        max_area_scan_1g_excel, max_area_scan_1g_plot = data_1[8], data_2[8]
+        one_g_meas_excel, one_g_meas_plot =             data_1[9], data_2[9]
+        ten_g_meas_excel, ten_g_meas_plot =             data_1[10], data_2[10]
+        
+        excel_data = [rf_exposure_cond_excel,
+                        mode_excel,
+                        test_position_excel,
+                        channel_num_excel,
+                        frequency_excel,
+                        rb_allocation_excel,
+                        rb_offset_excel,
+                        max_area_scan_1g_excel,
+                        one_g_meas_excel,
+                        ten_g_meas_excel]
+        plot_data = [rf_exposure_cond_plot,
+                        mode_plot,
+                        test_position_plot,
+                        channel_num_plot,
+                        frequency_plot,
+                        rb_allocation_plot,
+                        rb_offset_plot,
+                        max_area_scan_1g_plot,
+                        one_g_meas_plot,
+                        ten_g_meas_plot]
+
+        match_list.append([index + 1])
+        for excel_data_index, plot_data_index in zip(excel_data, plot_data):
+            if excel_data_index == plot_data_index:
+                match_list[index] = match_list[index] + ["Yes"]
+            else:
+                match_list[index] = match_list[index] + ["No"]
+                #match_list.extend([returnNotMatches(excel_data_index, plot_data_index)])
+    return(match_list)
 
 xl = path = tech = ""
 data_excel = []
@@ -641,23 +760,29 @@ nr_nrbs = {
         "100000000": "270"        
     }
 }
-window1 = make_win1()
+window_main, window_liquid, window_compare = make_win1(), None, None
 while True:
     window, event, values = sg.read_all_windows()
     
     # Break out of loop which closes the window.
-    if event == sg.WIN_CLOSED:
+    if event == sg.WIN_CLOSED or event == 'Quit':
         window.close()
-        break
+        if window == window_liquid:
+            window_liquid = None
+        elif window == window_compare:
+            window_compare = None
+        elif window == window_main:
+            break
     
-    window["-FuckedUp-"].update("")
-    path_excel = values["-data_1-"]                         # This is the path used to get the excel.
-    path_docx = values["-data_2-"]                          # This is the path used to get the microsoft document.
-    tech = values["-tech_1-"]                               # This is the technology/band that will be selected.
-    extremity_confirm = values["-confirm_extremity_1-"]     # This is a confirmation for whether you need extremity or not.
-    # excluded_exposure =  values["-excluded_exposure_1-"]  # This is the selection of body exposure condition. (Only Head and Body).
-    # excluded_number = values["-excluded_number_1-"]       # This is the number of excluded positions due to distance being to far from the antenna.
-        
+    if window == window_main and event != sg.WIN_CLOSED:
+        window["-FuckedUp-"].update("")
+        path_excel = values["-data_1-"]                         # This is the path used to get the excel.
+        path_docx = values["-data_2-"]                          # This is the path used to get the microsoft document.
+        tech = values["-tech_1-"]                               # This is the technology/band that will be selected.
+        extremity_confirm = values["-confirm_extremity_1-"]     # This is a confirmation for whether you need extremity or not.
+        # excluded_exposure =  values["-excluded_exposure_1-"]  # This is the selection of body exposure condition. (Only Head and Body).
+        # excluded_number = values["-excluded_number_1-"]       # This is the number of excluded positions due to distance being to far from the antenna.
+       
     print("Event:", event)
     print("Technology:", tech)
     
@@ -1247,41 +1372,6 @@ while True:
     # elif event == "-data_table_2-":
     #     print(values["-data_table_2-"])
     # NOTE: !!!!!!!!!!! OPTIONAL: If I have the time and willpower, try to figure this section out !!!!!!!!!!!
-    elif event == "-compare-":
-        sg.theme('DarkBlack') # Theme
-
-        # Layout
-        layout_match = [[sg.Table(values="",
-                                  headings=["Plot #", "Match 1g/10g?"],
-                                  key="-data_table_3-",
-                                  justification='center',
-                                  def_col_width=15,num_rows=18,
-                                  auto_size_columns=False,
-                                  enable_events=True)],
-                        [sg.Button("Prepare to Be Sad",
-                                   size=(30,1),
-                                   font=("Times New Roman", 12, "bold"),
-                                   tooltip="Press to compare the data.")]]
-        window_match = sg.Window("Sadness?", layout_match, auto_size_buttons=True, auto_size_text=True, modal=True)
-        
-        '''
-            Notes about this section:
-            The purpose of this section is to compare only the 1-g and 10-g measured SAR values. (NOTE: May have to add additional comparisons, since I noticed while testing that people were not using the correct communication system in DASY6/DASY8)
-        '''
-        while True:
-            event_match, values_match = window_match.read()
-
-            if event_match == None:
-                break
-            elif event_match == "Prepare to Be Sad":
-                match_xlsx_docx = [] # Initialize list to hold the excel and plot data.
-                # Compare data from excel and plots.
-                print(len(data_excel), len(data_plot))
-                for data_1, data_2, index in zip(data_excel, data_plot, range(0, len(data_excel))):
-                    one_g_meas_excel, one_g_meas_plot = data_1[9], data_2[9]
-                    ten_g_meas_excel, ten_g_meas_plot = data_1[10], data_2[10]
-                    match_xlsx_docx.append(["{}".format(index+1), "Yes" if (one_g_meas_excel == one_g_meas_plot and ten_g_meas_excel == ten_g_meas_plot) else "No"])
-                window_match["-data_table_3-"].update(values = match_xlsx_docx)
     elif event == '-hide-':
         '''
             Notes about this section:
@@ -1301,7 +1391,47 @@ while True:
         window['-data_table_2-'].ColumnsToDisplay = displaycolumns
         window['-data_table_1-'].Widget.configure(displaycolumns=displaycolumns)
         window['-data_table_2-'].Widget.configure(displaycolumns=displaycolumns)
-    else:
+    elif event == '-liquid_check-' and not window_liquid:
+        window_liquid = make_win2()
+    elif event == 'Calculate' and values["-target_1-"].strip() != '':
+        target = float(values["-target_1-"])
+        
+        file_1 = values["-file_1-"]
+        myfile = open(file_1, "rt")
+        lines = myfile.readlines()
+        
+        low_freq = target - (target % 5)
+        high_freq = target - (target % 5) + 5
+        
+        for line in lines:
+            if line.find(str(int(low_freq * pow(10,6)))) != -1:
+                rperm_cond_low = list((line.rstrip().split()[1],line.rstrip().split()[2]))
+            if line.find(str(int(high_freq * pow(10,6)))) != -1:
+                rperm_cond_high = list((line.rstrip().split()[1],line.rstrip().split()[2]))
+                break
+        
+        if target < 20 or target > 6000:
+            window['input_1'].update("N/A")
+            window['input_2'].update("N/A")
+            window['input_3'].update("N/A")    
+        else:
+            rpermitivity = ((high_freq - target)/(high_freq - low_freq))* float(rperm_cond_low[0]) + ((low_freq - target)/(low_freq - high_freq)) * float(rperm_cond_high[0])
+            rconductivity = ((high_freq - target)/(high_freq - low_freq))* float(rperm_cond_low[1]) + ((low_freq - target)/(low_freq - high_freq)) * float(rperm_cond_high[1])
+            conductivity = rconductivity * (2 * math.pi) * (target * pow(10,6)) * (8.854 * pow(10,-12))    
+            window['input_1'].update(target)
+            window['input_2'].update(round(rpermitivity,1))
+            window['input_3'].update(round(conductivity,3))        
+            
+        myfile.close()
+    elif event == "-compare-" and not window_compare:   
+        window_compare = make_win3()
+    elif event == "Prepare to Be Sad":
+        match_xlsx_docx = [] # Initialize list to hold the excel and plot data.
+        
+        # Compare data from excel and plots.
+        match_xlsx_docx = append_data(match_xlsx_docx, data_excel, data_plot)
+        window["-data_table_3-"].update(values = match_xlsx_docx)
+    elif (event == "Load" or (event == "Load Excel" and path == "")) or (event == "Load Excel" and tech == "") or (event == "Load Docx" and path_docx == ""):
         # Display text to user if a step was performed before a certain other step.
         if event == "Load" or (event == "Load Excel" and path == ""):
             error = "Please load an excel file."

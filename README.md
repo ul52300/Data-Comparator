@@ -10,7 +10,8 @@ Main Window:
 - Fixed some logic for getting the 'Mode' for WLAN, it should now be working as intended.
 - I know some people had issues where the window on startup would go offscreen, thus making it impossible to use.
   - This potentially has been fixed (?). Test it out and see if this fix worked as it works fine on my environment.
- 
+- Noticed that the logic to get 50% RB Offset at RB Position: High is wrong. This has been fixed.
+
 Comparator:
 - Added the same automatic hide function to this. It work once you have loaded data in and pressed 'Prepare to Be Sad'.
 

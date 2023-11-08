@@ -5,7 +5,7 @@ import math
 from docx import *
 from copy import deepcopy
 # Program: Data_Checker.py
-# Version: 1.0.3
+# Version: 0.5
 # Description: This program is used in order to display data onto a GUI inorder for the data to be compared to see if they match or not.
 # Functions:
 #   (1) To read Excel sheets and Microsoft Documents.
@@ -164,7 +164,7 @@ def make_win1():
             #             tooltip="Press this to hide unnessesary columns"),
             sg.Button("Liquid Checker",
                       key="-liquid_check-",
-                      size=CONFIRM_BUTTON_SIZE,
+                      size=(12,1),
                       font=BUTTON_FONT,
                       button_color="white",
                       tooltip="Press this to open the Liquid Checker"),

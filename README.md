@@ -1,24 +1,45 @@
 # Data-Comparator
 
-**Version: 1.0.3**
+**Version: 1.0.4**
 
 Changelog:
 
 Main Window:
-- Removed the 'Hide/Unhide' button.
-  - Instead of manually hiding what isn't neccesary per technology, the program will do it automatically!
-- Fixed some logic for getting the 'Mode' for WLAN, it should now be working as intended.
-- I know some people had issues where the window on startup would go offscreen, thus making it impossible to use.
-  - This potentially has been fixed (?). Test it out and see if this fix worked as it works fine on my environment.
-- Noticed that the logic to get 50% RB Offset at RB Position: High is wrong. This has been fixed.
+- Removed ability to type into the following input fields as this was never used:
+  - Choosing Excel File
+  - Choosing Technology
+  - Choosing Microsoft Docx
+  Your selection will still be visible, so you can see if you selected the right file or not.
+- Enabled resizing of windows this allows for the following:
+  - Able to dynamically change column size if you resize the window.
+  - Able to fit the window into the screen after startup, if it's too big.
+- Reduced the font on all text to make it easier to fit on the screen with certain application size settings.
+- Added a horizontal scroll bar to the tables in the event that one cannot see all of the data present.
+- Fixed the calculation of RB Allocation for 15 MHz BW, it should now be properly getting '36' instead of '37'.
+- Fixed some redundant code for LTE. This shouldn't have a effect on the functioning of the program.
 
 Comparator:
-- Added the same automatic hide function to this. It work once you have loaded data in and pressed 'Prepare to Be Sad'.
+- Revised this window.
+- Instead of showing a 'Y' or 'N' for each individual column for each parameter, there are now only two columns that tell you about the comparison:
+  - 'Match?':
+    - Outputs a 'Y' if the channel number, frequency, RB Allocation (if applicable), RB Offset (if applicable), Max Area Scan (if applicable), 1-g Measured, and 10-g Measured values are all matching between the Excel and Plot.
+    - Outputs a 'N' if ANYTHING list in the above is not matching between the Excel and Plot.
+  - 'If not, what is error?':
+    - Outputs the columns that are missing the data.
+      - Ex: If the 1-g Measured isn't matching, then it will output '1-g Measured SAR'. Or if RB Allocation and RB Offset are not matching then it will output 'RB Allocation, RB Offset'.
+    - If 'Match?' outputs a 'Y', then this outputs 'No Error'.
+
+Equipment **(NEW)**:
+- Added.
+- This window will have two tables that list out the following information for the probe and DAE:
+  - Plot #.
+  - SAR Lab of both the probe and DAE.
+  - Serial Number (SN) of both the probe and DAE.
+  - Calibration date of both the probe and DAE.
+  - Calibration due date of both the probe and DAE.
 
 Other Changes:
-- Removed the 'Hide/Unhide' code.
-- Added some stand-in code for a future addition to this program.
-
+- Changed the theme for all windows from 'DarkBlack' to 'NeutralBlue'.
 
 ----
 

@@ -5,7 +5,7 @@ import math
 from docx import *
 from copy import deepcopy
 # Program: Data_Checker.py
-# Version: 1.0.4
+# Version: 1.0.3
 # Description: This program is used in order to display data onto a GUI inorder for the data to be compared to see if they match or not.
 # Functions:
 #   (1) To read Excel sheets and Microsoft Documents.
@@ -17,8 +17,8 @@ window = sg.FlexForm('Data Checker', default_button_element_size = (5,2), auto_s
 # Column global variables.
 COL_HEADINGS = ["Plot #", "RF Exposure Condition", "Mode", "Test Position", "Ch #.", "Freq. (MHz)", "RB Allocation", "RB Offset", "Max Area (W/kg)", "1-g Meas. (W/kg)", "10-g Meas. (W/kg)"]
 COL_HEADINGS_COMPARATOR = ["Plot #", "RF Exposure Condition", "Mode", "Test Position",  "Match?", "If not, what is error?"]
-COL_HEADINGS_EQUIPMENT_PROBE =  ["Plot #", "SAR Lab", "DAE SN", "Probe Cal Date", "Probe Cal Due Date"]
-COL_HEADINGS_EQUIPMENT_DAE = ["Plot #", "SAR Lab", "DAE SN", "Probe Cal Date", "Probe Cal Due Date"]
+COL_HEADINGS_EQUIPMENT_PROBE =  ["Plot #", "SAR Lab", "Probe SN", "Probe Cal Date", "Probe Cal Due Date"]
+COL_HEADINGS_EQUIPMENT_DAE = ["Plot #", "SAR Lab", "DAE SN", "DAE Cal Date", "DAE Cal Due Date"]
 COL_HEADINGS_PWR_DRIFT = ["Plot #", "Power Drift (dB)", "Within ±0.2 dB?"]
 COL_WIDTHS = [len(COL_HEADINGS[0]), len(COL_HEADINGS[1])-4, len(COL_HEADINGS[2])+16, len(COL_HEADINGS[3]), len(COL_HEADINGS[4])+5, len(COL_HEADINGS[5]), len(COL_HEADINGS[6]), len(COL_HEADINGS[7]), len(COL_HEADINGS[8]), len(COL_HEADINGS[9]), len(COL_HEADINGS[10])]
 COL_WIDTHS_COMPARATOR = [len(COL_HEADINGS_COMPARATOR[0])-5, len(COL_HEADINGS_COMPARATOR[1])-4, len(COL_HEADINGS_COMPARATOR[2])+16, len(COL_HEADINGS_COMPARATOR[3])-5, len(COL_HEADINGS_COMPARATOR[4]), len(COL_HEADINGS_COMPARATOR[5])]

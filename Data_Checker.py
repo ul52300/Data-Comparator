@@ -5,39 +5,45 @@ import math
 from docx import *
 from copy import deepcopy
 # Program: Data_Checker.py
-# Version: 1.0.3
+# Version: 1.0.4
 # Description: This program is used in order to display data onto a GUI inorder for the data to be compared to see if they match or not.
 # Functions:
 #   (1) To read Excel sheets and Microsoft Documents.
 #   (2) Use parsed data in two tables that will be displayed on a GUI.
-
-# Theme
-sg.theme('DarkBlack')
 
 # Settings for the window.
 window = sg.FlexForm('Data Checker', default_button_element_size = (5,2), auto_size_buttons=False, grab_anywhere=False, resizable=False)
 
 # Column global variables.
 COL_HEADINGS = ["Plot #", "RF Exposure Condition", "Mode", "Test Position", "Ch #.", "Freq. (MHz)", "RB Allocation", "RB Offset", "Max Area (W/kg)", "1-g Meas. (W/kg)", "10-g Meas. (W/kg)"]
-COL_WIDTHS = [len(COL_HEADINGS[0]), len(COL_HEADINGS[1])-4, len(COL_HEADINGS[2])+16, len(COL_HEADINGS[3]), len(COL_HEADINGS[4])+5, len(COL_HEADINGS[5]), len(COL_HEADINGS[6]), len(COL_HEADINGS[7]), len(COL_HEADINGS[8]), len(COL_HEADINGS[9]), len(COL_HEADINGS[10])]
+COL_HEADINGS_COMPARATOR = ["Plot #", "RF Exposure Condition", "Mode", "Test Position",  "Match?", "If not, what is error?"]
+COL_HEADINGS_EQUIPMENT_PROBE =  ["Plot #", "SAR Lab", "DAE SN", "Probe Cal Date", "Probe Cal Due Date"]
+COL_HEADINGS_EQUIPMENT_DAE = ["Plot #", "SAR Lab", "DAE SN", "Probe Cal Date", "Probe Cal Due Date"]
 COL_HEADINGS_PWR_DRIFT = ["Plot #", "Power Drift (dB)", "Within ±0.2 dB?"]
-COL_WIDTHS_PWR_DRIFT = [len(COL_HEADINGS_PWR_DRIFT[0]), len(COL_HEADINGS_PWR_DRIFT[1]), COL_HEADINGS_PWR_DRIFT[2]]
+COL_WIDTHS = [len(COL_HEADINGS[0]), len(COL_HEADINGS[1])-4, len(COL_HEADINGS[2])+16, len(COL_HEADINGS[3]), len(COL_HEADINGS[4])+5, len(COL_HEADINGS[5]), len(COL_HEADINGS[6]), len(COL_HEADINGS[7]), len(COL_HEADINGS[8]), len(COL_HEADINGS[9]), len(COL_HEADINGS[10])]
+COL_WIDTHS_COMPARATOR = [len(COL_HEADINGS_COMPARATOR[0])-5, len(COL_HEADINGS_COMPARATOR[1])-4, len(COL_HEADINGS_COMPARATOR[2])+16, len(COL_HEADINGS_COMPARATOR[3])-5, len(COL_HEADINGS_COMPARATOR[4]), len(COL_HEADINGS_COMPARATOR[5])]
+COL_WIDTHS_EQUIPMENT = [len(COL_HEADINGS_EQUIPMENT_PROBE[0])-5, len(COL_HEADINGS_EQUIPMENT_PROBE[1]), len(COL_HEADINGS_EQUIPMENT_PROBE[2]), len(COL_HEADINGS_EQUIPMENT_PROBE[3]), len(COL_HEADINGS_EQUIPMENT_PROBE[4])]
+COL_WIDTHS_PWR_DRIFT = [len(COL_HEADINGS_PWR_DRIFT[index]) for index in range(0, len(COL_HEADINGS_PWR_DRIFT))]
 
 # Font global variables.
-NORMAL_FONT = ("Times New Roman", 12)
-BUTTON_FONT = ("Times New Roman", 12, "bold")
-TABLE_HEADER_FONT = ("Times New Roman", 16, "bold")
+NORMAL_FONT = ("Times New Roman", 10)
+TABLE_FONT = ("Times New Roman", 10, "bold")
+BUTTON_FONT = ("Times New Roman", 10, "bold")
+TABLE_HEADER_FONT = ("Times New Roman", 14, "bold")
 
 # Text size:
+DEFAULT_TEXT_SIZE = (20,1)
 CHOOSE_TEXT_SIZE = (20,1)
 ERROR_TEXT_SIZE = (20,1)
 EXTREMITY_TEXT_SIZE = (20,1)
 TABLE_HEADER_TEXT_SIZE = (7,2)
 
 # Button size:
+DEFAULT_BUTTON_SIZE = (10,1)
 LOAD_BUTTON_SIZE = (10,1)
 BROWSE_BUTTON_SIZE = (10,1)
 CONFIRM_BUTTON_SIZE = (10,1)
+EQUIPMENT_BUTTON_SIZE = (20,1)
 
 # Input box size:
 INPUT_EXCELDOCX_SIZE = (100,1)
@@ -45,7 +51,7 @@ TECHNOLOGY_COMBO_SIZE = (25,1)
 EXTREMITY_COMBO_SIZE = (25,1)
 
 # Number of rows for tables.
-TABLE_NUM_ROWS = 18
+TABLE_NUM_ROWS = 9
 
 # Flag for when hide button is pressed.
 HIDE_COUNTER_MAIN = 0
@@ -53,28 +59,35 @@ HIDE_COUNTER_COMPARATOR = 0
 
 # This is the main window.
 def make_win1():
+    # Theme
+    sg.theme('NeutralBlue')
+    
     # The layout of the window.
     layout = [ # The browser for choosing an excel file to be parsed.
             [sg.Text("Choose an excel file:",
-                    size=CHOOSE_TEXT_SIZE,
-                    font=NORMAL_FONT),
+                     size=CHOOSE_TEXT_SIZE,
+                     font=NORMAL_FONT),
             sg.Input(key="-data_1-",
-                        size=INPUT_EXCELDOCX_SIZE),
+                     readonly=True,
+                     size=INPUT_EXCELDOCX_SIZE),
             sg.FileBrowse("Browse",
-                            file_types=(("Excel Files", "*.xlsx"),),
-                            size=BROWSE_BUTTON_SIZE,
-                            tooltip="Choose the desired xlsx file that has the data.")],
+                          file_types=(("Excel Files", "*.xlsx"),),
+                          size=BROWSE_BUTTON_SIZE,
+                          font=BUTTON_FONT,
+                          tooltip="Choose the desired xlsx file that has the data.")],
             
             # Once an excel is loaded, pick a sheet (technology) that will be parsed.
             [sg.Text("Pick a Technology:", 
-                        size=CHOOSE_TEXT_SIZE, 
-                        font=NORMAL_FONT),
+                     size=CHOOSE_TEXT_SIZE, 
+                     font=NORMAL_FONT),
             sg.Combo(values="", 
-                        key="-tech_1-", 
-                        size=TECHNOLOGY_COMBO_SIZE),
+                     key="-tech_1-",
+                     readonly=True,
+                     size=TECHNOLOGY_COMBO_SIZE),
             sg.Button("Load",
-                        size=LOAD_BUTTON_SIZE,
-                        tooltip="Refreshes technology list.\nHit this after loading a new excel file."),
+                    size=LOAD_BUTTON_SIZE,
+                    font=BUTTON_FONT,
+                    tooltip="Refreshes technology list.\nHit this after loading a new excel file."),
             sg.Text("",
                     key="-Error_Technology-",
                     size=ERROR_TEXT_SIZE,
@@ -82,26 +95,28 @@ def make_win1():
                         
             # The browser for choosing a docx file to be parsed.
             [sg.Text("Choose a docx file:",
-                    size=CHOOSE_TEXT_SIZE,
-                    font=NORMAL_FONT),
-            sg.Input(key="-data_2-", 
-                        size=INPUT_EXCELDOCX_SIZE),
+                     size=CHOOSE_TEXT_SIZE,
+                     font=NORMAL_FONT),
+            sg.Input(key="-data_2-",
+                     readonly=True,
+                     size=INPUT_EXCELDOCX_SIZE),
             sg.FileBrowse("Browse",
-                            file_types=(("Microsoft Document", "*.docx"),),
-                            size=BROWSE_BUTTON_SIZE,
-                            tooltip="Choose the desired docx file that has the data.")],
+                          file_types=(("Microsoft Document", "*.docx"),),
+                          size=BROWSE_BUTTON_SIZE,
+                          font=BUTTON_FONT,
+                          tooltip="Choose the desired docx file that has the data.")],
             
             # Input on whether extremity is used or not. (NOTE: Currently this is hidden, because we don't delete rows in the excels normally, so the amount of rows in the excel that is being parsed should not change)
             [sg.Text("Extremity?:",
-                    size=EXTREMITY_TEXT_SIZE,
-                    font=NORMAL_FONT,
-                    visible=False),
+                     size=EXTREMITY_TEXT_SIZE,
+                     font=NORMAL_FONT,
+                     visible=False),
             sg.Combo(values=["Yes", "No"],
-                        default_value="Yes", 
-                        key="-confirm_extremity_1-", 
-                        size=EXTREMITY_COMBO_SIZE,
-                        disabled=True,
-                        visible=False)], 
+                     default_value="Yes", 
+                     key="-confirm_extremity_1-", 
+                     size=EXTREMITY_COMBO_SIZE,
+                     disabled=True,
+                     visible=False)], 
             
             [sg.HorizontalSeparator()],
             
@@ -112,13 +127,19 @@ def make_win1():
                     font=TABLE_HEADER_FONT,
                     text_color="green"),
             sg.Table(values="", 
-                        headings=COL_HEADINGS,  
-                        key="-data_table_1-",
-                        justification='center',
-                        col_widths=COL_WIDTHS,
-                        num_rows=TABLE_NUM_ROWS,
-                        auto_size_columns=False,
-                        enable_events=True)],
+                     headings=COL_HEADINGS,  
+                     key="-data_table_1-",
+                     justification='center',
+                     col_widths=COL_WIDTHS,
+                     num_rows=TABLE_NUM_ROWS,
+                     font=TABLE_FONT,
+                     alternating_row_color="grey50",
+                     row_colors=None,
+                     expand_x=True,
+                     expand_y=True,
+                     auto_size_columns=False,
+                     vertical_scroll_only=False,
+                     enable_events=True)],
             
             [sg.HorizontalSeparator()],
             
@@ -129,39 +150,45 @@ def make_win1():
                     font=TABLE_HEADER_FONT,
                     text_color="blue"),
             sg.Table(values="", 
-                        headings=COL_HEADINGS,  
-                        key="-data_table_2-",
-                        justification='center',
-                        col_widths=COL_WIDTHS,
-                        num_rows=TABLE_NUM_ROWS,
-                        auto_size_columns=False,
-                        enable_events=True)],          
+                     headings=COL_HEADINGS,  
+                     key="-data_table_2-",
+                     justification='center',
+                     col_widths=COL_WIDTHS,
+                     num_rows=TABLE_NUM_ROWS,
+                     font=TABLE_FONT,
+                     alternating_row_color="grey50",
+                     expand_x=True,
+                     expand_y=True,
+                     auto_size_columns=False,
+                     vertical_scroll_only=False,
+                     enable_events=True)],
             
             [sg.HorizontalSeparator()],
             
             # The buttons for: loading an excel, loading a docx, and compare results window.
             [sg.Button("Load Excel",
-                        size=CONFIRM_BUTTON_SIZE,
-                        font=BUTTON_FONT,
-                        button_color="white",
-                        tooltip="Press this to load the data from the Excel sheet."),
+                       size=CONFIRM_BUTTON_SIZE,
+                       font=BUTTON_FONT,
+                       button_color="white",
+                       auto_size_button=False,
+                       tooltip="Press this to load the data from the Excel sheet."),
             sg.Button("Load Docx",
-                        size=CONFIRM_BUTTON_SIZE,
-                        font=BUTTON_FONT,
-                        button_color="white",
-                        tooltip="Press this to load the data from the plot."),
+                      size=CONFIRM_BUTTON_SIZE,
+                      font=BUTTON_FONT,
+                      button_color="white",
+                      tooltip="Press this to load the data from the plot."),
             sg.Button("Compare",
-                        key="-compare-",
-                        size=CONFIRM_BUTTON_SIZE,
-                        font=BUTTON_FONT,
-                        button_color="white",
-                        tooltip="Press this to open a window to compare the 1-g and 10-g data from both tables."),
-            # sg.Button("Hide/Unhide",
-            #             key="-hide-",
-            #             size=CONFIRM_BUTTON_SIZE,
-            #             font=BUTTON_FONT,
-            #             button_color="white",
-            #             tooltip="Press this to hide unnessesary columns"),
+                      key="-compare-",
+                      size=CONFIRM_BUTTON_SIZE,
+                      font=BUTTON_FONT,
+                      button_color="white",
+                      tooltip="Press this to open a window to compare the 1-g and 10-g data from both tables."),
+            sg.Button("Equipment",
+                     key="-equipment-",
+                     size=CONFIRM_BUTTON_SIZE,
+                     font=BUTTON_FONT,
+                     button_color="white",
+                     tooltip="Press this to open the equipment menu."),
             sg.Button("Liquid Checker",
                       key="-liquid_check-",
                       size=(12,1),
@@ -173,110 +200,137 @@ def make_win1():
                     size=(20,1),
                     font=BUTTON_FONT)]  
     ]
-    return(sg.Window("Data Checker", layout, location=(0,0), finalize=True))   # Display the window.
+    return(sg.Window("Data Checker", layout, size=(1200,530), resizable=True, return_keyboard_events=True, location=(0,0), finalize=True))   # Display the window.
 
 # This is the liquid check window.
 def make_win2():
-    sg.theme('DarkBlack')
+    sg.theme('NeutralBlue')
     layout = [
             [sg.Text("Choose a .prn file from SAR drive:", 
-                     size=(26,1), 
-                     font=('Times New Roman', 12, "bold")), 
-             sg.Input(
-                 key="-file_1-", 
-                 size=(10,1)), 
-             sg.FileBrowse(
-                 size=(10,1))],
+                    size=(26,1), 
+                    font=BUTTON_FONT), 
+            sg.Input(
+                key="-file_1-", 
+                size=(10,1)), 
+            sg.FileBrowse(
+                size=(10,1))],
             [sg.Text("Input a target (MHz):", 
-                     size=(26,1), 
-                     font=('Times New Roman', 12, "bold")), 
-             sg.InputText(key="-target_1-", 
-                          size=(10,1))],
+                    size=(26,1), 
+                    font=BUTTON_FONT), 
+            sg.InputText(key="-target_1-", 
+                        size=(10,1))],
             [sg.Txt('')],
             [sg.Text("Results", 
-                     font=("Times New Roman", 14, "bold", "underline"))],
+                    font=("Times New Roman", 12, "bold", "underline"))],
             [sg.Text("Target Frequency (MHz):", 
-                     size=(20,1), 
-                     font=('Times New Roman', 12)), 
-             sg.Push(), 
-             sg.Text('',
-                     key='input_1',
-                     size=(10, 1), 
-                     font=('Times New Roman', 12, "bold"))],
+                    size=(20,1), 
+                    font=('Times New Roman', 10)), 
+            sg.Push(), 
+            sg.Text('',
+                    key='input_1',
+                    size=(10, 1), 
+                    font=BUTTON_FONT)],
             [sg.Text("Permitivity:", 
-                     size=(20,1), 
-                     font=('Times New Roman', 12)), 
-             sg.Push(), 
-             sg.Text('',
-                     key='input_2',
-                     size=(10, 1), 
-                     font=('Times New Roman', 12, "bold"))],
+                    size=(20,1), 
+                    font=('Times New Roman', 10)), 
+            sg.Push(), 
+            sg.Text('',
+                    key='input_2',
+                    size=(10, 1), 
+                    font=BUTTON_FONT)],
             [sg.Text("Conductivity:", 
-                     size=(20,1), 
-                     font=('Times New Roman', 12)), 
-             sg.Push(), 
-             sg.Text('',
-                     key='input_3',
-                     size=(10, 1), 
-                     font=('Times New Roman', 12, "bold"))],
+                    size=(20,1), 
+                    font=('Times New Roman', 10)), 
+            sg.Push(), 
+            sg.Text('',
+                    key='input_3',
+                    size=(10, 1), 
+                    font=BUTTON_FONT)],
             [sg.Txt('')],
             [sg.Button("Calculate", 
-                       size=(10,1)), 
-             sg.Push(), 
-             sg.Button("Quit", 
-                       size=(10,1))]
+                    size=(10,1)), 
+            sg.Push(), 
+            sg.Button("Quit", 
+                    size=(10,1))]
     ]
     return(sg.Window("Liquid Checker", layout, finalize=True))  # Display the window.
 
 # This is the comparator window.
 def make_win3():
-    sg.theme('DarkBlack') # Theme
+    sg.theme('NeutralBlue') # Theme
     layout = [
              [sg.Table(values="",
-                    headings=COL_HEADINGS,
+                    headings=COL_HEADINGS_COMPARATOR,
                     key="-data_table_3-",
                     justification='center',
-                    col_widths=COL_WIDTHS,
+                    col_widths=COL_WIDTHS_COMPARATOR,
                     num_rows=18,
-                    auto_size_columns=False,
+                    font=TABLE_FONT,
+                    expand_x=True,
+                    expand_y=True,
+                    auto_size_columns=True,
+                    vertical_scroll_only=False,
                     enable_events=True)],
             [sg.Button("Prepare to Be Sad",
                     size=(30,1),
-                    font=("Times New Roman", 12, "bold"),
+                    font=BUTTON_FONT,
                     tooltip="Press to compare the data.")]]
-    return(sg.Window("Sadness?", layout, finalize=True))
+    return(sg.Window("Sadness?", layout, size=(1200, 350), resizable=True, location=(0,0), finalize=True))
 
+# This is the equipment window.
 def make_win4():
-    sg.theme('DarkBlack') # Theme
+    sg.theme('NeutralBlue') # Theme
     layout = [
              [sg.Table(values="",
-                    headings=COL_HEADINGS,
-                    key="-data_table_3-",
-                    justification='center',
-                    col_widths=COL_WIDTHS,
-                    num_rows=18,
-                    auto_size_columns=False,
-                    enable_events=True)],
-            [sg.Button("Prepare to Be Sad",
-                    size=(30,1),
-                    font=("Times New Roman", 12, "bold"),
-                    tooltip="Press to compare the data.")]]
-    return(sg.Window("Sadness?", layout, finalize=True))    
+                       headings=COL_HEADINGS_EQUIPMENT_PROBE,
+                       key="-equipment_table_1-",
+                       justification='center',
+                       col_widths=COL_WIDTHS_EQUIPMENT,
+                       num_rows=9,
+                       font=TABLE_FONT,
+                       alternating_row_color="grey50",
+                       expand_x=True,
+                       expand_y=True,
+                       auto_size_columns=False,
+                       enable_events=True)],
+             [sg.Table(values="",
+                       headings=COL_HEADINGS_EQUIPMENT_DAE,
+                       key="-equipment_table_2-",
+                       justification='center',
+                       col_widths=COL_WIDTHS_EQUIPMENT,
+                       num_rows=9,
+                       font=TABLE_FONT,
+                       alternating_row_color="grey50",
+                       expand_x=True,
+                       expand_y=True,
+                       auto_size_columns=False,
+                       enable_events=True)],
+             [sg.Button("Load Equipment",
+                        key="-load_equipment-",
+                        size=EQUIPMENT_BUTTON_SIZE,
+                        font=BUTTON_FONT,
+                        tooltip="Press to load in equipment.")]]
+    return(sg.Window("Equipment Menu", layout, size=(670,360), resizable=True, location=(0,0), finalize=True))    
 
+# Function's purpose is to 
 def append_data(match_list, excel, plot):
+    compare_list = []
+    
     for data_1, data_2, index in zip(excel, plot, range(0, len(data_excel))):
-        rf_exposure_cond_excel, rf_exposure_cond_plot = data_1[1].lower(), data_2[1].lower()
-        mode_excel, mode_plot =                         data_1[2].lower(), data_2[2].lower()
-        test_position_excel, test_position_plot =       data_1[3].lower(), data_2[3].lower()
-        channel_num_excel, channel_num_plot =           data_1[4], data_2[4]
-        frequency_excel, frequency_plot =               data_1[5], data_2[5]
-        rb_allocation_excel, rb_allocation_plot =       data_1[6], data_2[6]
-        rb_offset_excel, rb_offset_plot =               data_1[7], data_2[7]
-        max_area_scan_1g_excel, max_area_scan_1g_plot = data_1[8], data_2[8]
-        one_g_meas_excel, one_g_meas_plot =             data_1[9], data_2[9]
-        ten_g_meas_excel, ten_g_meas_plot =             data_1[10], data_2[10]
+        rf_exposure_cond_excel, rf_exposure_cond_plot = data_1[1], data_2[1]   # Assign RF Exposure Conditions from both excel and plot.
+        mode_excel, mode_plot =                         data_1[2], data_2[2]   # Assign test mode from both excel and plot.
+        test_position_excel, test_position_plot =       data_1[3], data_2[3]   # Assign Test Position from both excel and plot.
+        channel_num_excel, channel_num_plot =           data_1[4], data_2[4]   # Assign Channel # from both excel and plot.
+        frequency_excel, frequency_plot =               data_1[5], data_2[5]   # Assign Frequency (MHz) from both excel and plot.
+        rb_allocation_excel, rb_allocation_plot =       data_1[6], data_2[6]   # Assign RB Allocation from both excel and plot.
+        rb_offset_excel, rb_offset_plot =               data_1[7], data_2[7]   # Assign RB Offset from both excel and plot.
+        max_area_scan_1g_excel, max_area_scan_1g_plot = data_1[8], data_2[8]   # Assign Max Area Scan 1g (W/kg) from both excel and plot.
+        one_g_meas_excel, one_g_meas_plot =             data_1[9], data_2[9]   # Assign Measured 1g SAR (W/kg) from both excel and plot.
+        ten_g_meas_excel, ten_g_meas_plot =             data_1[10], data_2[10] # Assign Measured 10g SAR (W/kg) from both excel and plot.
         
-        excel_data = [rf_exposure_cond_excel,
+        # Order the different parameters into a list for comparison.
+        excel_data = [
+                        rf_exposure_cond_excel,
                         mode_excel,
                         test_position_excel,
                         channel_num_excel,
@@ -286,7 +340,9 @@ def append_data(match_list, excel, plot):
                         max_area_scan_1g_excel,
                         one_g_meas_excel,
                         ten_g_meas_excel]
-        plot_data = [rf_exposure_cond_plot,
+        # Order the different parameters into a list for comparison.
+        plot_data = [
+                        rf_exposure_cond_plot,
                         mode_plot,
                         test_position_plot,
                         channel_num_plot,
@@ -297,14 +353,39 @@ def append_data(match_list, excel, plot):
                         one_g_meas_plot,
                         ten_g_meas_plot]
 
-        match_list.append([index + 1])
+        # Logic for the comparator.
+        match_list.append([index + 1]) # Insert plot number.
         for excel_data_index, plot_data_index in zip(excel_data, plot_data):
-            if excel_data_index == plot_data_index:
-                match_list[index] = match_list[index] + ["Yes"]
+            # Insert a 'Y' if the data matches or a 'N' if it doesn't. No comparison needed for first 4 columns, so add it to table.
+            if excel_data_index in excel_data[0:3] and plot_data_index in plot_data[0:3] and excel_data_index.lower() == plot_data_index.lower():
+                match_list[index] = match_list[index] + [excel_data_index]
+            elif excel_data_index == plot_data_index:
+                match_list[index] = match_list[index] + ["Y"]
             else:
-                match_list[index] = match_list[index] + ["No"]
-                #match_list.extend([returnNotMatches(excel_data_index, plot_data_index)])
-    return(match_list)
+                match_list[index] = match_list[index] + ["N"]
+
+    # Logic to tell what is not lining up in for data comparisons.
+    for row, index in zip(match_list, range(0, len(match_list))):
+        compare_list.append(row[:4])
+        if "N" in row[4:]:
+            compare_list[index].append("N")
+            
+            indices = []
+            for iter in range(0, len(row[4:])):
+                if row[4:][iter] == "N":
+                    indices.append(iter+4)
+                    
+            for error_col in indices:
+                if len(compare_list[index]) < 6:
+                    compare_list[index].append(COL_HEADINGS[error_col])
+                else:
+                    print(compare_list[index])
+                    compare_list[index][5] = compare_list[index][5] + ", " + COL_HEADINGS[error_col]
+        else:
+            compare_list[index].append("Y")
+            compare_list[index].append("No Error")
+        
+    return(match_list, compare_list)
 
 xl = path = tech = ""
 data_excel = []
@@ -781,17 +862,19 @@ nr_nrbs = {
         "100000000": "270"        
     }
 }
-window_main, window_liquid, window_compare = make_win1(), None, None
+window_main, window_liquid, window_compare, window_equipment = make_win1(), None, None, None
 while True:
     window, event, values = sg.read_all_windows()
     
-    # Break out of loop which closes the window.
+    # Break out of loop which closes the window(s).
     if event == sg.WIN_CLOSED or event == 'Quit':
         window.close()
         if window == window_liquid:
             window_liquid = None
         elif window == window_compare:
             window_compare = None
+        elif window == window_equipment:
+            window_equipment = None
         elif window == window_main:
             break
     
@@ -1042,11 +1125,10 @@ while True:
             window['-data_table_2-'].Widget.configure(displaycolumns=displaycolumns)
         except:
             continue
-        
+                
         window["-data_table_1-"].update(values = data)
         
     elif event == "Load Docx" and path_docx != "":
-
         window["-Error_Technology-"].update("")
         window["-FuckedUp-"].update("") 
 
@@ -1057,7 +1139,10 @@ while True:
             window["-FuckedUp-"].update("Dx")            
         docx_paragraphs = [para.text for para in docx.paragraphs if ((para.text).strip() not in ["", "\n"])] # Remove random whitespace and newlines from the paragraph list. # Load all paragraphs in the docx.
         docx_tables = docx.tables   # Load all tables in the docx.
-        table_1 = []    # Initialize the list that will hold all the data.                   
+        main_table = []   # Initialize the list that will hold data for the main window.
+        probe_table = []  # Initialize the list that will hold data for the probe.
+        dae_table = []    # Initialize the list that will hold data for the DAE.
+        liquid_table = [] # Initialize the list that will hold the data for the liquid checker window. (NOTE: COME BACK TO THIS LATER. WORKING ON EQUIPMENT WINDOW FIRST.)
         
         '''
             Notes about this section:
@@ -1070,6 +1155,14 @@ while True:
             5) 1-g Max Area Scan SAR
             6) 1-g Measured Zoom Scan SAR
             7) 10-g Measured Zoom Scan SAR
+            
+            Other pieces of data that it will grab:
+            1) Probe SN
+            2) Probe Cal Date
+            3) DAE SN
+            4) DAE Cal Date
+            5) Relative Permittivity
+            6) Conductivity
         '''
         start_of_tables = 0 # Determines the table that is having its data parsed.
         end_of_tables = 4
@@ -1082,58 +1175,72 @@ while True:
                     break
                 elif start_of_tables == 0: # 'start_of_tables = 0' is the "Exposure Conditions" table on the plot.
                     split_freqch = (table.rows[1].cells[1].text).split()
-                    frequency, channel = '{:.1f}'.format(float(split_freqch[0])), split_freqch[2] # Assign frequency and channel.
-                    group = (table.rows[2].cells[1].text).split()                                 # Assign group.
-                    test_distance = table.rows[3].cells[3].text                                   # Assign test distance.
+                    permittivity = table.rows[0].cells[3]                                         # Get relative permittivity.
+                    conductivity = table.rows[1].cells[3]                                         # Get conductivity.
+                    frequency, channel = '{:.1f}'.format(float(split_freqch[0])), split_freqch[2] # Get frequency and channel.
+                    group = (table.rows[2].cells[1].text).split()                                 # Get group.
+                    test_distance = table.rows[3].cells[3].text                                   # Get test distance.
+
+                    main_table.append([test_distance,
+                                       channel,
+                                       frequency])
                     
-                    del split_freqch    # Clear memory
+                    del split_freqch    # Clear memory.
                     
-                    table_1.append([test_distance, # Get test distances. (NOTE: Temporary, used as a flag for the RF exposure condition)
-                                    channel,       # Get channels.
-                                    frequency])    # Get frequencies.
-                                                   # NOTE: IF YOU WANT THE RELATIVE PERMITTIVITY AND CONDUCTIVITY, ADD 'rpermittivity' AND 'conductivity' HERE AND UNCOMMENT!
-                # NOTE: IF YOU WANT TO ADD THE HARDWARE (DAE/PROBE) UNCOMMENT THIS SECTION!
-                # elif start_of_tables == 1: # 'start_of_tables = 1' is the "Hardware Setup" table on the plot.
-                #     split_probedate = (table.rows[0].cells[1].text).split()
-                #     split_daedate = (table.rows[1].cells[1].text).split()
-                #     probe_sn, probe_caldate = split_probedate[2], split_probedate[4]
-                #     dae_sn, dae_caldate = split_daedate[1], split_daedate[3]
+                elif start_of_tables == 1: # 'start_of_tables = 1' is the "Hardware Setup" table on the plot.
+                    split_probe_sncal = (table.rows[0].cells[1].text).split()
+                    probe_sn = "".join(text for text in split_probe_sncal[0:3]) # Get probe serial number.
+                    probe_cal = split_probe_sncal[len(split_probe_sncal)-1]     # Get probe calibration date.
+                    probe_caldue = str(int(probe_cal[0:4]) + 1) + probe_cal[4:] # Get probe calibration due date. (1 year from calibration date)
                     
-                #     # Extend current sublist of 'table_1' with probe sn/calibration date and DAE sn/calibration date.
-                #     if sublist_start < len(table_1):
-                #         table_1[sublist_start].extend([probe_sn,        # Get probe sn.
-                #                                        probe_caldate,   # Get probe calibration due date.
-                #                                        dae_sn,          # Get dae sn.
-                #                                        dae_caldate])    # Get dae calibration due date.
-                #     sublist_start += 1
+                    split_dae_sncal = (table.rows[1].cells[1].text).split()
+                    dae_sn = " ".join(text for text in split_dae_sncal[0:2]) # Get DAE serial number.
+                    dae_cal = split_dae_sncal[len(split_dae_sncal)-1]        # Get DAE calibration date.
+                    dae_caldue = str(int(dae_cal[0:4]) + 1) + dae_cal[4:]    # Get DAE calibration due date. (1 year from calibration date)
+                                
+                    probe_table.append([probe_sn,
+                                        probe_cal,
+                                        probe_caldue])
+                    dae_table.append([dae_sn,
+                                      dae_cal,
+                                      dae_caldue])
+                    
+                    del split_probe_sncal   # Clear memory.
+                    del split_dae_sncal     # Clear memory.
+                    
                 elif start_of_tables == 3: # 'start_of_tables = 3' is the "Measurement Results" table on the plot.
                     max_area_scan_1g = table.rows[1].cells[1].text         # Get max area scan's measured 1-g (W/kg).
                     max_area_scan_10g = table.rows[2].cells[1].text        # Get max area scan's measured 10-g (W/kg).
                     if len(table.rows[0].cells) == 2:                      # A table length of '2' means that there is only an area scan value.
-                        zoom_meas_1g = "N/A"                               # There is no measured 1-g.
-                        zoom_meas_10g = "N/A"                              # There is no measured 10-g.
+                        zoom_meas_1g = "N/A"                               # There is no measured 1-g when only area scan.
+                        zoom_meas_10g = "N/A"                              # There is no measured 10-g when only area scan.
+                        power_drift = "N/A"                                # There is no power drift when only area scan.
                     elif len(table.rows[0].cells) == 3:                    # A table length of '3' means that there is one scan.
                         zoom_meas_1g = table.rows[1].cells[2].text         # Get zoom scans measured 1-g (W/kg).
                         zoom_meas_10g = table.rows[2].cells[2].text        # Get zoom scans measured 10-g (W/kg).
+                        power_drift = table.rows[3].cells[2].text          # Get power drift (dB).
                     elif len(table.rows[0].cells) == 4:                    # A table length of '4' means that there are two scans.
                         first_zoom_meas_1g = table.rows[1].cells[2].text   # Get first zoom scan's measured 1-g (W/kg).
                         first_zoom_meas_10g = table.rows[2].cells[2].text  # Get first zoom scan's measured 10-g (W/kg).
+                        first_power_drift = table.rows[3].cells[2].text    # Get first power drift (dB).
                         second_zoom_meas_1g = table.rows[1].cells[3].text  # Get second zoom scan's measured 1-g (W/kg).
                         second_zoom_meas_10g = table.rows[2].cells[3].text # Get second zoom scan's measured 10-g (W/kg).
+                        second_power_drift = table.rows[3].cells[3].text   # Get second power drift (dB).
                         
                         zoom_meas_1g = first_zoom_meas_1g if first_zoom_meas_1g > second_zoom_meas_1g else second_zoom_meas_1g      # Determines which 1-g measured zoom scan to use.
                         zoom_meas_10g = first_zoom_meas_10g if first_zoom_meas_10g > second_zoom_meas_10g else second_zoom_meas_10g # Determines which 10-g measured zoom scan to use.
+                        power_drift = first_power_drift if (first_zoom_meas_1g > second_zoom_meas_1g and first_zoom_meas_10g > second_zoom_meas_10g) else second_power_drift # 
                         
                     # Extend current sublist of 'table_1' with max area scan, 1-g measured, 10-g measured.
-                    if sublist_start < len(table_1):
+                    if sublist_start < len(main_table):
                         if "WLAN" in group:
-                            table_1[sublist_start].extend(["{:.3f}".format(round(float(max_area_scan_1g), 3))])
+                            main_table[sublist_start].extend(["{:.3f}".format(round(float(max_area_scan_1g), 3))])
                         
                         if zoom_meas_1g != "N/A" and zoom_meas_10g != "N/A":
-                            table_1[sublist_start].extend(["{:.3f}".format(round(float(zoom_meas_1g), 3)),
+                            main_table[sublist_start].extend(["{:.3f}".format(round(float(zoom_meas_1g), 3)),
                                                            "{:.3f}".format(round(float(zoom_meas_10g), 3))]) # NOTE: IF YOU WANT TO ADD POWER DRIFT, ADD 'power_drift' HERE.
                         else:
-                            table_1[sublist_start].extend([zoom_meas_1g, zoom_meas_10g])
+                            main_table[sublist_start].extend([zoom_meas_1g, zoom_meas_10g])
                     sublist_start += 1
 
             sublist_start = 0
@@ -1150,6 +1257,7 @@ while True:
         plot_data = []
         start_of_tables = 0
         index = 0
+        index_equipment = 0
         plot_num = 0
         for paragraph_num in range(0, len(docx_paragraphs)):
             para_index = docx_paragraphs[paragraph_num] # Holds the current string in the paragraph.
@@ -1158,7 +1266,16 @@ while True:
             if paragraph_num % 6 == 0 or paragraph_num == 0:
                 plot_num += 1
                 plot_data.append([plot_num])
-
+                probe_table[index_equipment].insert(0, plot_num)
+                dae_table[index_equipment].insert(0, plot_num)
+                
+                sar_lab = (para_index[para_index.find("SAR Lab"):(para_index.find("SAR Lab")+len("SAR Lab")+3)]).strip()
+                if any(sar_lab not in equipment[index_equipment] for equipment in [probe_table, dae_table]):
+                    probe_table[index_equipment].insert(1, sar_lab)
+                    dae_table[index_equipment].insert(1, sar_lab)
+    
+                index_equipment += 1
+            
             # Logic to get position.
             split_head = (docx_tables[start_of_tables].rows[2].cells[3].text).split()
             if any([pos in para_index for pos in ["CHEEK", "TILT", "BACK", "FRONT", "EDGE TOP", "EDGE RIGHT", "EDGE BOTTOM", "EDGE LEFT"]]):
@@ -1211,7 +1328,7 @@ while True:
                         slot_num = "4"
                     mode = "GPRS {} {}".format(slot_num, "Slot" if int(slot_num) == 1 else "Slots")
                 elif "WCDMA" in group:
-                    mode = "Rel 99"
+                    mode = "Rel. 99"
                 elif "LTE-FDD" in group or "LTE-TDD" in group:
                     mode = "QPSK"
                 elif "FR1" in group:
@@ -1236,15 +1353,15 @@ while True:
                     
                     Anything other than these test distances are usually counted as "Extremity".
                 '''
-                if "0.00" == table_1[index][0]:
+                if "0.00" == main_table[index][0]:
                     rf_exposure_condition = "Head" if any(pos in position for pos in ["Left Cheek", "Left Tilt", "Right Cheek", "Right Tilt"]) else "Extremity"
-                elif "5.00" == table_1[index][0]:
+                elif "5.00" == main_table[index][0]:
                     rf_exposure_condition = "Body-Worn/Hotspot"
-                elif "10.00" == table_1[index][0]:
+                elif "10.00" == main_table[index][0]:
                     rf_exposure_condition = "Hotspot"
-                elif "15.00" == table_1[index][0]:
+                elif "15.00" == main_table[index][0]:
                     rf_exposure_condition = "Body-Worn"
-                del table_1[index][0] # Remove test distance flag.
+                del main_table[index][0] # Remove test distance flag.
                 
                 plot_data[index].insert(1, rf_exposure_condition) # Insert RF exposure condition into plot data list.
                 plot_data[index].insert(2, mode)                  # Insert Mode into plot data list.
@@ -1283,13 +1400,13 @@ while True:
                     technology = bluetooth
                     
                 # GSM / WCDMA / Wi-Fi / Bluetooth don't have RBs
-                table_1[index].insert(2, "N/A") # Fill table with 'N/A' for RB Allocation.
-                table_1[index].insert(3, "N/A") # Fill table with 'N/A' for RB Offset.
-                table_1[index].insert(4, "N/A") # Fill table with 'N/A' for Max Area Scan.
+                main_table[index].insert(2, "N/A") # Fill table with 'N/A' for RB Allocation.
+                main_table[index].insert(3, "N/A") # Fill table with 'N/A' for RB Offset.
+                main_table[index].insert(4, "N/A") # Fill table with 'N/A' for Max Area Scan.
             # Logic for Wi-Fi.
             elif any(wifi in para_index for wifi in ["Wi-Fi", "Wi-fi", "WI-FI", "Wifi", "WLAN", "UNII", "U-NII"]):
-                table_1[index].insert(2, "N/A") # Fill table with 'N/A' for RB Allocation.
-                table_1[index].insert(3, "N/A") # Fill table with 'N/A' for RB Offset.
+                main_table[index].insert(2, "N/A") # Fill table with 'N/A' for RB Allocation.
+                main_table[index].insert(3, "N/A") # Fill table with 'N/A' for RB Offset.
             # Logic to get LTE and 5G NR (FR1).
             elif "LTE" in para_index or "5G NR" in para_index:
                 # Get the technology that is used.
@@ -1344,9 +1461,12 @@ while True:
                     # Get the RB allocation and offset. This is dependent on the RB position and what percentage of the RB is being allocated.
                     # When 50% of the RBs are allocated.
                     if check_half_rb:
-                        rb_allocation = str(math.floor(full_rb / 2)) # Half of the number of RBs is being allocated.
-                        if any(position in para_index for position in ["RBPosition:Low", "RBPosition:Mid", "RBPosition:High"]): # Is the RB position "Low", "Mid", or "High"?
-                            rb_offset = rb_positions[str(int(bw_hz))]["LTE"][num_rb][rb_position]            # Grab RB offset from dictionary. 
+                        if any(bw_hz / pow(10,6) == bw for bw in [3, 15]):
+                            rb_allocation = "8" if bw_hz / pow(10,6) == 3 else "36"
+                        else:
+                            rb_allocation = str(math.floor(full_rb / 2)) # Half of the number of RBs is being allocated.
+                            
+                        rb_offset = rb_positions[str(int(bw_hz))]["LTE"][num_rb][rb_position]            # Grab RB offset from dictionary. 
                     # When 100% of the RBs are allocated.
                     elif check_full_rb:
                         rb_allocation = str(full_rb) # 100% of the RB is being allocated.
@@ -1354,27 +1474,21 @@ while True:
                     # When the amount of RBs allocated is 1.
                     else:
                         rb_allocation = "1" # 1 RB is being allocated.
-                        if any(position in para_index for position in ["RBPosition:Low", "RBPosition:Mid"]): # Is the RB position "Low" or "Mid"?
-                            rb_offset = rb_positions[str(int(bw_hz))]["LTE"][num_rb][rb_position]            # Grab RB offset from dictionary.
-                        else:
-                            rb_offset = str(full_rb - 1)    # Otherwise offset by 99% of RBs.
-                    table_1[index].insert(2, rb_allocation) # Insert number of allocated RBs.
-                    table_1[index].insert(3, rb_offset)     # Insert offset for RBs.
-                    table_1[index].insert(4, "N/A")         # Fill table with 'N/A' for Max Area Scan.
+                        rb_offset = rb_positions[str(int(bw_hz))]["LTE"][num_rb][rb_position]            # Grab RB offset from dictionary.
+                    main_table[index].insert(2, rb_allocation) # Insert number of allocated RBs.
+                    main_table[index].insert(3, rb_offset)     # Insert offset for RBs.
+                    main_table[index].insert(4, "N/A")         # Fill table with 'N/A' for Max Area Scan.
                 # This is the logic to get 
                 elif "{} MHz".format(str(find_bw)) in para_index and ("5G NR" in para_index):
-                    find_scs = str(para_index[para_index.find("kHz")-3:para_index.find("kHz")-1]).strip()       # Find subcarrier spacing in the plot.
-                    scs_hz = float(find_scs) * pow(10,3)                                                        # SCS in Hz.
-                    full_rb = int(nr_nrbs[str(int(scs_hz))][str(int(bw_hz))])                                   # Get number of RBs.
+                    find_scs = str(para_index[para_index.find("kHz")-3:para_index.find("kHz")-1]).strip() # Find subcarrier spacing in the plot.
+                    scs_hz = float(find_scs) * pow(10,3)                                                  # SCS in Hz.
+                    full_rb = int(nr_nrbs[str(int(scs_hz))][str(int(bw_hz))])                             # Get number of RBs.
                     
                     # Get the RB allocation and offset. This is dependent on the RB position and what percentage of the RB is being allocated.
                     # When 50% of the RBs are allocated.
                     if check_half_rb:
                         rb_allocation = str(math.floor(full_rb / 2)) # Half of the number of RBs is being allocated.
-                        if any(position in para_index for position in ["RBPosition:Low", "RBPosition:Mid"]):       # Is the RB position "Low" or "Mid"?
-                            rb_offset = rb_positions[str(int(bw_hz))]["NR"][str(int(scs_hz))][num_rb][rb_position] # Grab RB offset from dictionary. 
-                        else:
-                            rb_offset = str(full_rb - 1) # Otherwise offset by 99% of RBs.
+                        rb_offset = rb_positions[str(int(bw_hz))]["NR"][str(int(scs_hz))][num_rb][rb_position] # Grab RB offset from dictionary. 
                     # When 100% of the RBs are allocated.
                     elif check_full_rb:
                         rb_allocation = str(full_rb) # 100% of the RB is being allocated.
@@ -1382,19 +1496,18 @@ while True:
                     # When the amount of RBs allocated is 1.
                     else:
                         rb_allocation = "1" # 1 RB is being allocated.
-                        if any(position in para_index for position in ["RBPosition:Low", "RBPosition:Mid"]):       # Is the RB position "Low" or "Mid"?
-                            rb_offset = rb_positions[str(int(bw_hz))]["NR"][str(int(scs_hz))][num_rb][rb_position] # Grab RB offset from dictionary.
-                        else:
-                            rb_offset = str(full_rb - 1)    # Otherwise offset by 99% of RBs.
-                    table_1[index].insert(2, rb_allocation) # Insert number of allocated RBs.
-                    table_1[index].insert(3, rb_offset)     # Insert offset for RBs.
-                    table_1[index].insert(4, "N/A")         # Fill table with 'N/A' for Max Area Scan.
+                        rb_offset = rb_positions[str(int(bw_hz))]["NR"][str(int(scs_hz))][num_rb][rb_position] # Grab RB offset from dictionary.
+                        #else:
+                        #    rb_offset = str(full_rb - 1) 
+                    main_table[index].insert(2, rb_allocation) # Insert number of allocated RBs.
+                    main_table[index].insert(3, rb_offset)     # Insert offset for RBs.
+                    main_table[index].insert(4, "N/A")         # Fill table with 'N/A' for Max Area Scan.
             
             # If the current plot has ONLY AREA SCANS, increment. (No zoom scan data).
-            if len(plot_data[index]) == 4 and paragraph_num % 6 == 0:
+            if len(plot_data[index]) == 4 and (paragraph_num % 6 == 0 or paragraph_num == 0):
                 index += 1
 
-        df_plot = (pd.DataFrame(table_1)).values.tolist()
+        df_plot = (pd.DataFrame(main_table)).values.tolist()
 
         # Merge the 'Plot #' and 'Position' with the 'Channel #', 'Frequency', 'RB allocation' (if applicable), 'RB offset' (if applicable), '1-g Measured SAR', and '10-g Measured SAR'.
         for index in range(0, len(df_plot)):
@@ -1429,8 +1542,11 @@ while True:
     # elif event == "-data_table_2-":
     #     print(values["-data_table_2-"])
     # NOTE: !!!!!!!!!!! OPTIONAL: If I have the time and willpower, try to figure this section out !!!!!!!!!!!
+    
+    # Open the liquid check window if it has not been opened already.
     elif event == '-liquid_check-' and not window_liquid:
         window_liquid = make_win2()
+    # Logic to calculate the relative permitivity and conductivity given a target frequency.
     elif event == 'Calculate' and values["-target_1-"].strip() != '':
         target = float(values["-target_1-"])
         
@@ -1438,9 +1554,10 @@ while True:
         myfile = open(file_1, "rt")
         lines = myfile.readlines()
         
-        low_freq = target - (target % 5)
-        high_freq = target - (target % 5) + 5
+        low_freq = target - (target % 5)      # Getting the 'low' freq from the target.
+        high_freq = target - (target % 5) + 5 # Getting the 'high' freq from the target.
         
+        # Logic to get the relative permitivity and relative conductivity from .prn file.
         for line in lines:
             if line.find(str(int(low_freq * pow(10,6)))) != -1:
                 rperm_cond_low = list((line.rstrip().split()[1],line.rstrip().split()[2]))
@@ -1448,11 +1565,12 @@ while True:
                 rperm_cond_high = list((line.rstrip().split()[1],line.rstrip().split()[2]))
                 break
         
-        if target < 20 or target > 6000:
+        if target < 20 or target > 6000: # The .prn file does not go below 20 MHz and above 6000 MHz.
             window['input_1'].update("N/A")
             window['input_2'].update("N/A")
             window['input_3'].update("N/A")    
         else:
+            # Logic for linear interpolation of the relative permitivity and conductivity for the target frequency.
             rpermitivity = ((high_freq - target)/(high_freq - low_freq))* float(rperm_cond_low[0]) + ((low_freq - target)/(low_freq - high_freq)) * float(rperm_cond_high[0])
             rconductivity = ((high_freq - target)/(high_freq - low_freq))* float(rperm_cond_low[1]) + ((low_freq - target)/(low_freq - high_freq)) * float(rperm_cond_high[1])
             conductivity = rconductivity * (2 * math.pi) * (target * pow(10,6)) * (8.854 * pow(10,-12))    
@@ -1461,30 +1579,38 @@ while True:
             window['input_3'].update(round(conductivity,3))        
             
         myfile.close()
+    # Open the Comparator window if it has not been open already.
     elif event == "-compare-" and not window_compare:   
         window_compare = make_win3()
     elif event == "Prepare to Be Sad":
-        '''
-            Notes about this section:
-            The purpose of this section is to hide the columns on the table that are unnessesary when checking certain technologies. I.E. RB Allocation, RB Offset, and Max Area Scan.
-        '''
-        try:
-            displaycolumns = deepcopy(COL_HEADINGS) # Creating a deepcopy as to not override the original.
-            if any(technology in group for technology in ["GSM", "WCDMA", "WLAN", "Bluetooth"]):
-                displaycolumns.remove('RB Allocation')
-                displaycolumns.remove('RB Offset')    
-            if "WLAN" != group:
-                displaycolumns.remove('Max Area (W/kg)')
-            window['-data_table_3-'].ColumnsToDisplay = displaycolumns
-            window['-data_table_3-'].Widget.configure(displaycolumns=displaycolumns)
-        except:
-            continue
-
-        match_xlsx_docx = [] # Initialize list to hold the excel and plot data.
+        window3 = window['-data_table_3-']
 
         # Compare data from excel and plots.
-        match_xlsx_docx = append_data(match_xlsx_docx, data_excel, data_plot)
-        window["-data_table_3-"].update(values = match_xlsx_docx)
+        match_xlsx_docx, compare_data = append_data([], data_excel, data_plot)
+        
+        print(compare_data)
+        
+        # # Logic to show on the table if there is a mismatch in the data comparisons.
+        # for row in match_xlsx_docx:
+        #     if "N" in row[4:]:
+        #         window3.update(row_colors=[(match_xlsx_docx.index(row), "red")])
+        #     else:
+        #         window3.update(row_colors=[(match_xlsx_docx.index(row), "")])
+                
+        window3.update(values = compare_data) # Insert data into table.
+    # Open Equipment window if it has not been open yet.
+    elif event == "-equipment-" and not window_equipment:
+        window_equipment = make_win4()
+    # Logic to load the equipment data into the Equipment window.
+    elif event == "-load_equipment-":
+        try:
+            window["-equipment_table_1-"].update(values=probe_table) # Insert probe data to top table.
+            window["-equipment_table_2-"].update(values=dae_table)   # Insert dae data to bottom table.
+        except:
+            window["-equipment_table_1-"].update(values="")
+            window["-equipment_table_2-"].update(values="")
+        print(window.size)
+    # Errors messages.
     elif (event == "Load" or (event == "Load Excel" and path == "")) or (event == "Load Excel" and tech == "") or (event == "Load Docx" and path_docx == ""):
         # Display text to user if a step was performed before a certain other step.
         if event == "Load" or (event == "Load Excel" and path == ""):

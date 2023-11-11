@@ -20,6 +20,7 @@ Main Window:
 
 Comparator:
 - Revised this window.
+- The first four columns will be the Plot #, RF Exposure Condition, Mode, and Test Position.
 - Instead of showing a 'Y' or 'N' for each individual column for each parameter, there are now only two columns that tell you about the comparison:
   - 'Match?':
     - Outputs a 'Y' if the channel number, frequency, RB Allocation (if applicable), RB Offset (if applicable), Max Area Scan (if applicable), 1-g Measured, and 10-g Measured values are all matching between the Excel and Plot.

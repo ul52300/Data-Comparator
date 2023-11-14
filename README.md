@@ -1,46 +1,31 @@
 # Data-Comparator
 
-**Version: 1.0.4**
+**Version: 1.0.5**
 
 Changelog:
 
-Main Window:
-- Removed ability to type into the following input fields as this was never used:
-  - Choosing Excel File
-  - Choosing Technology
-  - Choosing Microsoft Docx
-  Your selection will still be visible, so you can see if you selected the right file or not.
-- Enabled resizing of windows this allows for the following:
-  - Able to dynamically change column size if you resize the window.
-  - Able to fit the window into the screen after startup, if it's too big.
-- Reduced the font on all text to make it easier to fit on the screen with certain application size settings.
-- Added a horizontal scroll bar to the tables in the event that one cannot see all of the data present.
-- Fixed the calculation of RB Allocation for 15 MHz BW, it should now be properly getting '36' instead of '37'.
-- Fixed some redundant code for LTE. This shouldn't have a effect on the functioning of the program.
-
-Comparator:
-- Revised this window.
-- The first four columns will be the Plot #, RF Exposure Condition, Mode, and Test Position.
-- Instead of showing a 'Y' or 'N' for each individual column for each parameter, there are now only two columns that tell you about the comparison:
-  - 'Match?':
-    - Outputs a 'Y' if the channel number, frequency, RB Allocation (if applicable), RB Offset (if applicable), Max Area Scan (if applicable), 1-g Measured, and 10-g Measured values are all matching between the Excel and Plot.
-    - Outputs a 'N' if ANYTHING list in the above is not matching between the Excel and Plot.
-  - 'If not, what is error?':
-    - Outputs the columns that are missing the data.
-      - Ex: If the 1-g Measured isn't matching, then it will output '1-g Measured SAR'. Or if RB Allocation and RB Offset are not matching then it will output 'RB Allocation, RB Offset'.
-    - If 'Match?' outputs a 'Y', then this outputs 'No Error'.
-
-Equipment **(NEW)**:
-- Added.
-- This window will have two tables that list out the following information for the probe and DAE:
-  - Plot #.
-  - SAR Lab of both the probe and DAE.
-  - Serial Number (SN) of both the probe and DAE.
-  - Calibration date of both the probe and DAE.
-  - Calibration due date of both the probe and DAE.
+Liquid Checker:
+- Added a table that is able to check the relative permittivity and conductivity of the plot that you load.
+  - The table contains 9 columns in this order:
+    - Plot #
+    - SAR Lab
+    - Date & Time tested
+    - Frequency (This is what you would enter previously into the older version of the Liquid Checker)
+    - Permittivity (Plot)
+    - Conductivity (Plot)
+    - Permittivity (.prn file)
+    - Conductivity (.prn file)
+    - A comparator for both the plot and .prn data. Outputs a 'Y' if they match and a 'N' if not.
+  - It is important that you load the plot (Microsoft Docx) first before you 'Load Parameters', otherwise nothing will happen.
+- It should be noted that the original liquid checker is still there if you only need to check one target for a certain .prn.
+- Changed some font on the Liquid Checker window to match other windows.
+- Added a note at the top for the purpose of the two sections of this window.
 
 Other Changes:
-- Changed the theme for all windows from 'DarkBlack' to 'NeutralBlue'.
+- Created functions for the following:
+  - Finding the .prn path.
+  - The old liquid checker section.
+  - THe new liquid checker section.
 
 ----
 

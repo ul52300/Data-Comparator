@@ -1,6 +1,6 @@
 import PySimpleGUI as sg
 import pandas as pd
-#import os
+import os
 import math
 from docx import *
 from copy import deepcopy
@@ -16,6 +16,7 @@ window = sg.FlexForm('Data Checker', default_button_element_size = (5,2), auto_s
 
 # Column global variables.
 COL_HEADINGS = ["Plot #", "RF Exposure Condition", "Mode", "Test Position", "Ch #.", "Freq. (MHz)", "RB Allocation", "RB Offset", "Max Area (W/kg)", "1-g Meas. (W/kg)", "10-g Meas. (W/kg)"]
+COL_HEADINGS_LIQUID = ["Plot #", "SAR Lab", "Date & Time", "Frequency (MHz)", "Permittivity on Plot", "Conductivity on Plot", "Permittivity on PRN", "Conductivity on PRN", "Match?"]
 COL_HEADINGS_COMPARATOR = ["Plot #", "RF Exposure Condition", "Mode", "Test Position",  "Match?", "If not, what is error?"]
 COL_HEADINGS_EQUIPMENT_PROBE =  ["Plot #", "SAR Lab", "Probe SN", "Probe Cal Date", "Probe Cal Due Date"]
 COL_HEADINGS_EQUIPMENT_DAE = ["Plot #", "SAR Lab", "DAE SN", "DAE Cal Date", "DAE Cal Due Date"]
@@ -27,6 +28,7 @@ COL_WIDTHS_PWR_DRIFT = [len(COL_HEADINGS_PWR_DRIFT[index]) for index in range(0,
 
 # Font global variables.
 NORMAL_FONT = ("Times New Roman", 10)
+NORMAL_OUTPUT_FONT = ("Times New Roman", 10, "bold")
 TABLE_FONT = ("Times New Roman", 10, "bold")
 BUTTON_FONT = ("Times New Roman", 10, "bold")
 TABLE_HEADER_FONT = ("Times New Roman", 14, "bold")
@@ -206,54 +208,89 @@ def make_win1():
 def make_win2():
     sg.theme('NeutralBlue')
     layout = [
+            [sg.Text("Notes about this window:",
+                     font=NORMAL_OUTPUT_FONT)],
+            [sg.Text("- Use the top portion of this window if you just want to know the permittivity of a single target frequency.",
+                     font=NORMAL_FONT)],
+            [sg.Text("- Use the bottom portion if you want to check the permittivity and conductivity of a WHOLE plot.",
+                     font=NORMAL_FONT)],
+            [sg.HorizontalSeparator()],
             [sg.Text("Choose a .prn file from SAR drive:", 
                     size=(26,1), 
-                    font=BUTTON_FONT), 
+                    font=NORMAL_FONT), 
             sg.Input(
                 key="-file_1-", 
-                size=(10,1)), 
-            sg.FileBrowse(
-                size=(10,1))],
+                size=(10,1),
+                font=BUTTON_FONT,
+                readonly=True), 
+            sg.FileBrowse(size=(10,1),
+                          initial_folder="\\\\FREshares\\SAR\\5. Liquid Check (result and prn)")],
             [sg.Text("Input a target (MHz):", 
                     size=(26,1), 
-                    font=BUTTON_FONT), 
+                    font=NORMAL_FONT), 
             sg.InputText(key="-target_1-", 
                         size=(10,1))],
             [sg.Txt('')],
             [sg.Text("Results", 
-                    font=("Times New Roman", 12, "bold", "underline"))],
+                     font=("Times New Roman", 12, "bold", "underline"))],
             [sg.Text("Target Frequency (MHz):", 
-                    size=(20,1), 
-                    font=('Times New Roman', 10)), 
-            sg.Push(), 
+                     size=(20,1), 
+                     font=('Times New Roman', 10)), 
             sg.Text('',
                     key='input_1',
                     size=(10, 1), 
-                    font=BUTTON_FONT)],
-            [sg.Text("Permitivity:", 
-                    size=(20,1), 
-                    font=('Times New Roman', 10)), 
-            sg.Push(), 
+                    font=NORMAL_OUTPUT_FONT)],
+            [sg.Text("Permittivity:", 
+                     size=(20,1), 
+                     font=('Times New Roman', 10)), 
             sg.Text('',
                     key='input_2',
                     size=(10, 1), 
-                    font=BUTTON_FONT)],
+                    font=NORMAL_OUTPUT_FONT)],
             [sg.Text("Conductivity:", 
-                    size=(20,1), 
-                    font=('Times New Roman', 10)), 
-            sg.Push(), 
+                     size=(20,1), 
+                     font=('Times New Roman', 10)), 
             sg.Text('',
                     key='input_3',
                     size=(10, 1), 
-                    font=BUTTON_FONT)],
+                    font=NORMAL_OUTPUT_FONT)],
             [sg.Txt('')],
             [sg.Button("Calculate", 
-                    size=(10,1)), 
+                       size=(10,1),
+                       font=BUTTON_FONT)],
+            [sg.HorizontalSeparator()],
+            [sg.Text("Choose a .prn file from SAR drive:", 
+                     size=(26,1), 
+                     font=NORMAL_FONT), 
+            sg.Input(
+                key="-file_2-", 
+                size=(10,1),
+                font=BUTTON_FONT,
+                readonly=True), 
+            sg.FileBrowse(size=(10,1),
+                          initial_folder="\\\\FREshares\\SAR\\5. Liquid Check (result and prn)")],
+            [sg.Table(values="", 
+                      headings=COL_HEADINGS_LIQUID,  
+                      key="-liquid_table_1-",
+                      justification='center',
+                      col_widths=[],
+                      num_rows=TABLE_NUM_ROWS,
+                      font=TABLE_FONT,
+                      alternating_row_color="grey50",
+                      expand_x=True,
+                      expand_y=True,
+                      auto_size_columns=False,
+                      vertical_scroll_only=False,
+                      enable_events=True)],
+            [sg.Button("Load Parameters",
+                       size=(15,1),
+                       font=BUTTON_FONT),
             sg.Push(), 
             sg.Button("Quit", 
-                    size=(10,1))]
+                      size=(10,1),
+                      font=BUTTON_FONT)]
     ]
-    return(sg.Window("Liquid Checker", layout, finalize=True))  # Display the window.
+    return(sg.Window("Liquid Checker", layout, resizable=True, location=(0,0), finalize=True))  # Display the window.
 
 # This is the comparator window.
 def make_win3():
@@ -312,7 +349,105 @@ def make_win4():
                         tooltip="Press to load in equipment.")]]
     return(sg.Window("Equipment Menu", layout, size=(670,360), resizable=True, location=(0,0), finalize=True))    
 
-# Function's purpose is to 
+# This function's purpose is to get a PRN file based on the SAR Lab and date of the current plot.
+def find_prn(target, sar_lab, date_prn):
+    # Defining each building's path.
+    building_one_dir = os.listdir("\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\Building 1 SAR Labs")
+    building_twofront_dir = os.listdir("\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\Building 2 Front SAR Labs")
+    building_tworear_dir = os.listdir("\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\Building 2 Rear SAR Labs")
+
+    # Logic for determining where the SAR Lab is located.
+    if sar_lab in building_one_dir:
+        hsl_dir = os.listdir("\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\Building 1 SAR Labs\\{}\\prn data for (for importing to DASY medium parameters)\\Head".format(sar_lab))
+        building = "Building 1 SAR Labs"
+    elif sar_lab in building_twofront_dir:
+        hsl_dir = os.listdir("\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\Building 2 Front SAR Labs\\{}\\prn data for (for importing to DASY medium parameters)\\Head".format(sar_lab))
+        building = "Building 2 Front SAR Labs"
+    elif sar_lab in building_tworear_dir:
+        hsl_dir = os.listdir("\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\Building 2 Rear SAR Labs\\{}\\prn data for (for importing to DASY medium parameters)\\Head".format(sar_lab))
+        building = "Building 2 Rear SAR Labs"
+        
+    # Logic for determining the folder you get for frequency.
+    closest_freq = []
+    for hsl in hsl_dir:
+        if len(closest_freq) == 0:
+            closest_freq.append("6")
+            closest_freq.append(abs(float(target)-6))
+        else:
+            freq_distance = abs(float(target)-float(hsl[3:]))
+            if freq_distance <= closest_freq[1]:
+                closest_freq[0] = hsl[3:]
+                closest_freq[1] = freq_distance
+    
+    # Logic to get the correct PRN file. (NOTE: 4 days is the maximum days allowed for a valid liquid check).
+    hsl_freq = "HSL" + closest_freq[0]
+    prn_dir = os.listdir("\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\{}\\{}\\prn data for (for importing to DASY medium parameters)\\Head\\{}".format(building, sar_lab, hsl_freq))
+    found = 0
+    count_days = 0
+    while found != 1 and count_days < 5:
+        index_prnfolder = 0
+        for prn in prn_dir:
+            if date_prn in prn:
+                prn_file = prn_dir[index_prnfolder]
+                found = 1
+            index_prnfolder += 1
+        date_prn = date_prn.split("-")
+        date_prn[2] = "{}".format(int(date_prn[2]) - 1)
+        date_prn = "-".join(date_prn)
+        count_days += 1    
+    prn_file = "\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\{}\\{}\\prn data for (for importing to DASY medium parameters)\\Head\\{}\\{}".format(building, sar_lab, hsl_freq, prn_file)
+    return(prn_file)
+
+# This function's purpose is to calculate the permittivity and conductivity of a particular target frequency.
+def permcondCalcSolo(target, lines):
+    low_freq = target - (target % 5)      # Getting the 'low' freq from the target.
+    high_freq = target - (target % 5) + 5 # Getting the 'high' freq from the target.
+    
+    # Logic to get the relative permitivity and relative conductivity from .prn file.
+    for line in lines:
+        if line.find(str(int(low_freq * pow(10,6)))) != -1:
+            rperm_cond_low = list((line.rstrip().split()[1],line.rstrip().split()[2]))
+        if line.find(str(int(high_freq * pow(10,6)))) != -1:
+            rperm_cond_high = list((line.rstrip().split()[1],line.rstrip().split()[2]))
+            break
+    
+    if target < 20 or target > 6000: # The .prn file does not go below 20 MHz and above 6000 MHz.
+        window['input_1'].update("N/A")
+        window['input_2'].update("N/A")
+        window['input_3'].update("N/A")    
+    else:
+        # Logic for linear interpolation of the relative permitivity and conductivity for the target frequency.
+        rpermitivity = ((high_freq - target)/(high_freq - low_freq))* float(rperm_cond_low[0]) + ((low_freq - target)/(low_freq - high_freq)) * float(rperm_cond_high[0])
+        rconductivity = ((high_freq - target)/(high_freq - low_freq))* float(rperm_cond_low[1]) + ((low_freq - target)/(low_freq - high_freq)) * float(rperm_cond_high[1])
+        conductivity = rconductivity * (2 * math.pi) * (target * pow(10,6)) * (8.854 * pow(10,-12))
+        window['input_1'].update(target)
+        window['input_2'].update(round(rpermitivity,1))
+        window['input_3'].update(round(conductivity,3))
+
+# This function's purpose is to calculate the permittivity and conductivity so that it will be compared to the plot's data.
+def permcondCalcTable(target, lines):
+    low_freq = target - (target % 5)      # Getting the 'low' freq from the target.
+    high_freq = target - (target % 5) + 5 # Getting the 'high' freq from the target.
+    
+    # Logic to get the relative permitivity and relative conductivity from .prn file.
+    for line in lines:
+        if line.find(str(int(low_freq * pow(10,6)))) != -1:
+            rperm_cond_low = list((line.rstrip().split()[1],line.rstrip().split()[2]))
+        if line.find(str(int(high_freq * pow(10,6)))) != -1:
+            rperm_cond_high = list((line.rstrip().split()[1],line.rstrip().split()[2]))
+            break
+    
+    if target < 20 or target > 6000: # The .prn file does not go below 20 MHz and above 6000 MHz.
+        rpermitivity = "N/A"
+        conductivity = "N/A"  
+    else:
+        # Logic for linear interpolation of the relative permitivity and conductivity for the target frequency.
+        rpermitivity = ((high_freq - target)/(high_freq - low_freq))* float(rperm_cond_low[0]) + ((low_freq - target)/(low_freq - high_freq)) * float(rperm_cond_high[0])
+        rconductivity = ((high_freq - target)/(high_freq - low_freq))* float(rperm_cond_low[1]) + ((low_freq - target)/(low_freq - high_freq)) * float(rperm_cond_high[1])
+        conductivity = rconductivity * (2 * math.pi) * (target * pow(10,6)) * (8.854 * pow(10,-12))
+    return(str(rpermitivity), str(conductivity))
+
+# This function's purpose is to compare the data from both the Excel and plots.
 def append_data(match_list, excel, plot):
     compare_list = []
     
@@ -379,7 +514,6 @@ def append_data(match_list, excel, plot):
                 if len(compare_list[index]) < 6:
                     compare_list[index].append(COL_HEADINGS[error_col])
                 else:
-                    print(compare_list[index])
                     compare_list[index][5] = compare_list[index][5] + ", " + COL_HEADINGS[error_col]
         else:
             compare_list[index].append("Y")
@@ -1142,7 +1276,7 @@ while True:
         main_table = []   # Initialize the list that will hold data for the main window.
         probe_table = []  # Initialize the list that will hold data for the probe.
         dae_table = []    # Initialize the list that will hold data for the DAE.
-        liquid_table = [] # Initialize the list that will hold the data for the liquid checker window. (NOTE: COME BACK TO THIS LATER. WORKING ON EQUIPMENT WINDOW FIRST.)
+        liquid_table = [] # Initialize the list that will hold the data for the liquid checker window.
         
         '''
             Notes about this section:
@@ -1163,6 +1297,7 @@ while True:
             4) DAE Cal Date
             5) Relative Permittivity
             6) Conductivity
+            7) Target Frequency for Liquid Check window
         '''
         start_of_tables = 0 # Determines the table that is having its data parsed.
         end_of_tables = 4
@@ -1175,15 +1310,20 @@ while True:
                     break
                 elif start_of_tables == 0: # 'start_of_tables = 0' is the "Exposure Conditions" table on the plot.
                     split_freqch = (table.rows[1].cells[1].text).split()
-                    permittivity = table.rows[0].cells[3]                                         # Get relative permittivity.
-                    conductivity = table.rows[1].cells[3]                                         # Get conductivity.
+                    permittivity = table.rows[0].cells[3].text                                    # Get relative permittivity.
+                    conductivity = table.rows[1].cells[3].text                                    # Get conductivity.
                     frequency, channel = '{:.1f}'.format(float(split_freqch[0])), split_freqch[2] # Get frequency and channel.
                     group = (table.rows[2].cells[1].text).split()                                 # Get group.
                     test_distance = table.rows[3].cells[3].text                                   # Get test distance.
-
+                    target = frequency                                                            # Get target frequency.
+                    
                     main_table.append([test_distance,
                                        channel,
                                        frequency])
+                    
+                    liquid_table.append([target,
+                                         permittivity,
+                                         conductivity])
                     
                     del split_freqch    # Clear memory.
                     
@@ -1257,24 +1397,34 @@ while True:
         plot_data = []
         start_of_tables = 0
         index = 0
-        index_equipment = 0
+        index_equipment_liquid = 0
         plot_num = 0
         for paragraph_num in range(0, len(docx_paragraphs)):
             para_index = docx_paragraphs[paragraph_num] # Holds the current string in the paragraph.
             
-            # Logic to add the plot number to the table.
+            # Logic to add the plot number to the table and also add Probe, DAE, and Liquid Check data to their own respective tables.
             if paragraph_num % 6 == 0 or paragraph_num == 0:
                 plot_num += 1
                 plot_data.append([plot_num])
-                probe_table[index_equipment].insert(0, plot_num)
-                dae_table[index_equipment].insert(0, plot_num)
+                probe_table[index_equipment_liquid].insert(0, plot_num)
+                dae_table[index_equipment_liquid].insert(0, plot_num)
+                liquid_table[index_equipment_liquid].insert(0, plot_num)
                 
                 sar_lab = (para_index[para_index.find("SAR Lab"):(para_index.find("SAR Lab")+len("SAR Lab")+3)]).strip()
-                if any(sar_lab not in equipment[index_equipment] for equipment in [probe_table, dae_table]):
-                    probe_table[index_equipment].insert(1, sar_lab)
-                    dae_table[index_equipment].insert(1, sar_lab)
+                split_date_tested = (para_index[para_index.find("Date/Time:"):]).split() # In the plot it is listed as 'Date/Time: ####-##-##, ##:##'
+                date_tested = split_date_tested[1] + " " + split_date_tested[2]          # Get date and time specifically.
+
+                # Insert probe and dae data to its own table.
+                if any(sar_lab not in equipment[index_equipment_liquid] for equipment in [probe_table, dae_table]):
+                    probe_table[index_equipment_liquid].insert(1, sar_lab)
+                    dae_table[index_equipment_liquid].insert(1, sar_lab)
+                
+                # Insert liquid data to its own table.                
+                if date_tested not in liquid_table:
+                    liquid_table[index_equipment_liquid].insert(1, sar_lab)
+                    liquid_table[index_equipment_liquid].insert(2, date_tested)
     
-                index_equipment += 1
+                index_equipment_liquid += 1 # Move up one index for probe/DAE and liquid check tables.
             
             # Logic to get position.
             split_head = (docx_tables[start_of_tables].rows[2].cells[3].text).split()
@@ -1547,39 +1697,62 @@ while True:
     elif event == '-liquid_check-' and not window_liquid:
         window_liquid = make_win2()
     # Logic to calculate the relative permitivity and conductivity given a target frequency.
-    elif event == 'Calculate' and values["-target_1-"].strip() != '':
+    elif event == 'Calculate' and values["-target_1-"].strip() != '' and values["-file_1-"].strip() != '':
         target = float(values["-target_1-"])
         
-        file_1 = values["-file_1-"]
-        myfile = open(file_1, "rt")
-        lines = myfile.readlines()
-        
-        low_freq = target - (target % 5)      # Getting the 'low' freq from the target.
-        high_freq = target - (target % 5) + 5 # Getting the 'high' freq from the target.
-        
-        # Logic to get the relative permitivity and relative conductivity from .prn file.
-        for line in lines:
-            if line.find(str(int(low_freq * pow(10,6)))) != -1:
-                rperm_cond_low = list((line.rstrip().split()[1],line.rstrip().split()[2]))
-            if line.find(str(int(high_freq * pow(10,6)))) != -1:
-                rperm_cond_high = list((line.rstrip().split()[1],line.rstrip().split()[2]))
-                break
-        
-        if target < 20 or target > 6000: # The .prn file does not go below 20 MHz and above 6000 MHz.
-            window['input_1'].update("N/A")
-            window['input_2'].update("N/A")
-            window['input_3'].update("N/A")    
-        else:
-            # Logic for linear interpolation of the relative permitivity and conductivity for the target frequency.
-            rpermitivity = ((high_freq - target)/(high_freq - low_freq))* float(rperm_cond_low[0]) + ((low_freq - target)/(low_freq - high_freq)) * float(rperm_cond_high[0])
-            rconductivity = ((high_freq - target)/(high_freq - low_freq))* float(rperm_cond_low[1]) + ((low_freq - target)/(low_freq - high_freq)) * float(rperm_cond_high[1])
-            conductivity = rconductivity * (2 * math.pi) * (target * pow(10,6)) * (8.854 * pow(10,-12))    
-            window['input_1'].update(target)
-            window['input_2'].update(round(rpermitivity,1))
-            window['input_3'].update(round(conductivity,3))        
+        try:
+            file_1 = values["-file_1-"]
+            myfile = open(file_1, "rt")
+            lines = myfile.readlines()
             
+            permcondCalcSolo(target, lines)
+        
+            myfile.close()
+        except:
+            continue
+
         myfile.close()
     # Open the Comparator window if it has not been open already.
+    elif event == 'Load Parameters' and values["-file_2-"].strip() != '':
+        for row, index in zip(liquid_table, range(0, len(liquid_table))):
+            target = round(float(row[3]), 1) # Get target frequency.
+            
+            # Logic to format the date to search for .prn file.
+            # Date on PRN ((Year: ####)-(Month: abc)-(Day: ##))
+            date_tested = row[2]
+            months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            date_prn = (date_tested[:date_tested.find(",")]).split("-")
+            date_prn[1] = months[int(date_prn[1])-1]
+            date_prn = "-".join(date_prn)
+            
+            sar_lab = liquid_table[index][1] # Need SAR Lab to search for PRN file.
+            
+            prn_file = find_prn(target, sar_lab, date_prn) # Get PRN file.
+            
+            try:
+                myfile = open(prn_file, "rt")
+                lines = myfile.readlines()
+                
+                rpermittivity, conductivity = permcondCalcTable(target, lines)
+
+                liquid_table[index].append("{}".format(round(float(rpermittivity), 1))) # Add and format relative permittivity to table.
+                liquid_table[index].append("{}".format(round(float(conductivity), 3)))  # Add and format conductivity to table.
+            
+                myfile.close()
+                
+                # Compare plot and PRN data.
+                rperm_plot = row[4] # Assign relative permittivity from plot.
+                cond_plot =  row[5] # Assign conductivity from plot.
+                rperm_prn =  row[6] # Assign relative permittivity calculated from PRN.
+                cond_prn =   row[7] # Assign conductivity calculated from PRN.
+                if (rperm_plot == rperm_prn) and (cond_plot == cond_prn):
+                    liquid_table[index].append("Y")
+                else:
+                    liquid_table[index].append("N")
+            except:
+                continue
+                
+        window['-liquid_table_1-'].update(values=liquid_table)
     elif event == "-compare-" and not window_compare:   
         window_compare = make_win3()
     elif event == "Prepare to Be Sad":
@@ -1587,9 +1760,7 @@ while True:
 
         # Compare data from excel and plots.
         match_xlsx_docx, compare_data = append_data([], data_excel, data_plot)
-        
-        print(compare_data)
-        
+                
         # # Logic to show on the table if there is a mismatch in the data comparisons.
         # for row in match_xlsx_docx:
         #     if "N" in row[4:]:
@@ -1609,7 +1780,6 @@ while True:
         except:
             window["-equipment_table_1-"].update(values="")
             window["-equipment_table_2-"].update(values="")
-        print(window.size)
     # Errors messages.
     elif (event == "Load" or (event == "Load Excel" and path == "")) or (event == "Load Excel" and tech == "") or (event == "Load Docx" and path_docx == ""):
         # Display text to user if a step was performed before a certain other step.

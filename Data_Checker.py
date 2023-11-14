@@ -1705,7 +1705,7 @@ while True:
 
         myfile.close()
     # Open the Comparator window if it has not been open already.
-    elif event == 'Load Parameters' and values["-data_2-"].strip() != '':
+    elif event == 'Load Parameters' and path_docx != "":
         for row, index in zip(liquid_table, range(0, len(liquid_table))):
             target = round(float(row[3]), 1) # Get target frequency.
             

@@ -259,16 +259,8 @@ def make_win2():
                        size=(10,1),
                        font=BUTTON_FONT)],
             [sg.HorizontalSeparator()],
-            [sg.Text("Choose a .prn file from SAR drive:", 
-                     size=(26,1), 
-                     font=NORMAL_FONT), 
-            sg.Input(
-                key="-file_2-", 
-                size=(10,1),
-                font=BUTTON_FONT,
-                readonly=True), 
-            sg.FileBrowse(size=(10,1),
-                          initial_folder="\\\\FREshares\\SAR\\5. Liquid Check (result and prn)")],
+            [sg.Text("Plot's Liquid Parameters",
+                     font=("Times New Roman", 12, "bold", "underline"))],
             [sg.Table(values="", 
                       headings=COL_HEADINGS_LIQUID,  
                       key="-liquid_table_1-",
@@ -1713,7 +1705,7 @@ while True:
 
         myfile.close()
     # Open the Comparator window if it has not been open already.
-    elif event == 'Load Parameters' and values["-file_2-"].strip() != '':
+    elif event == 'Load Parameters' and values["-data_2-"].strip() != '':
         for row, index in zip(liquid_table, range(0, len(liquid_table))):
             target = round(float(row[3]), 1) # Get target frequency.
             

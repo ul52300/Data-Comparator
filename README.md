@@ -1,31 +1,12 @@
 # Data-Comparator
 
-**Version: 1.0.5**
+**Version: 1.0.6**
 
 Changelog:
 
 Liquid Checker:
-- Added a table that is able to check the relative permittivity and conductivity of the plot that you load.
-  - The table contains 9 columns in this order:
-    - Plot #
-    - SAR Lab
-    - Date & Time tested
-    - Frequency (This is what you would enter previously into the older version of the Liquid Checker)
-    - Permittivity (Plot)
-    - Conductivity (Plot)
-    - Permittivity (.prn file)
-    - Conductivity (.prn file)
-    - A comparator for both the plot and .prn data. Outputs a 'Y' if they match and a 'N' if not.
-  - It is important that you load the plot (Microsoft Docx) first before you 'Load Parameters', otherwise nothing will happen.
-- It should be noted that the original liquid checker is still there if you only need to check one target for a certain .prn.
-- Changed some font on the Liquid Checker window to match other windows.
-- Added a note at the top for the purpose of the two sections of this window.
-
-Other Changes:
-- Created functions for the following:
-  - Finding the .prn path.
-  - The old liquid checker section.
-  - THe new liquid checker section.
+- Updated the logic in getting the PRN file.
+  - It should now get the correct PRN file for ALL cases, provided that the liquid check folder is not tampered with.
 
 ----
 

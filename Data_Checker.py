@@ -210,7 +210,7 @@ def make_win2():
     layout = [
             [sg.Text("Notes about this window:",
                      font=NORMAL_OUTPUT_FONT)],
-            [sg.Text("- Use the top portion of this window if you just want to know the permittivity of a single target frequency.",
+            [sg.Text("- Use the top portion of this window if you just want to know the permittivity and conductivtiy of a single target frequency.",
                      font=NORMAL_FONT)],
             [sg.Text("- Use the bottom portion if you want to check the permittivity and conductivity of a WHOLE plot.",
                      font=NORMAL_FONT)],

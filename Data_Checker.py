@@ -1727,9 +1727,14 @@ while True:
                 
                 rpermittivity, conductivity = permcondCalcTable(target, lines)
 
-                liquid_table[index].append("{}".format(round(float(rpermittivity), 1))) # Add and format relative permittivity to table.
-                liquid_table[index].append("{}".format(round(float(conductivity), 3)))  # Add and format conductivity to table.
-            
+                # NOTE: Permittivity is formatted - #.##, Conductivity is formatted - #.## or 0.###.
+                liquid_table[index].append("{}".format(round(float(rpermittivity), 1)))     # Add and format relative permittivity to table.
+                if conductivity[0] == "0":
+                    liquid_table[index].append("{}".format(round(float(conductivity), 3)))  # Add and format conductivity to table if the conductivity < 1.
+                elif len("{}".format(round(float(conductivity), 2))) == 3:                  
+                    liquid_table[index].append("{}0".format(round(float(conductivity), 2))) # Add and format conductivity to table if the rounding only produces 2 digits.
+                else:
+                    liquid_table[index].append("{}".format(round(float(conductivity), 2)))  # Add and format conductivity to table otherwise.
                 myfile.close()
                 
                 # Compare plot and PRN data.

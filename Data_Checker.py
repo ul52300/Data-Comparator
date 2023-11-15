@@ -2,10 +2,11 @@ import PySimpleGUI as sg
 import pandas as pd
 import os
 import math
+import datetime as dt
 from docx import *
 from copy import deepcopy
 # Program: Data_Checker.py
-# Version: 1.0.5
+# Version: 1.0.6
 # Description: This program is used in order to display data onto a GUI inorder for the data to be compared to see if they match or not.
 # Functions:
 #   (1) To read Excel sheets and Microsoft Documents.
@@ -342,7 +343,7 @@ def make_win4():
     return(sg.Window("Equipment Menu", layout, size=(670,360), resizable=True, location=(0,0), finalize=True))    
 
 # This function's purpose is to get a PRN file based on the SAR Lab and date of the current plot.
-def find_prn(target, sar_lab, date_prn):
+def find_prn(target, sar_lab, date_prn, months):
     # Defining each building's path.
     building_one_dir = os.listdir("\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\Building 1 SAR Labs")
     building_twofront_dir = os.listdir("\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\Building 2 Front SAR Labs")
@@ -362,7 +363,9 @@ def find_prn(target, sar_lab, date_prn):
     # Logic for determining the folder you get for frequency.
     closest_freq = []
     for hsl in hsl_dir:
-        if len(closest_freq) == 0:
+        if any(liquid in hsl for liquid in ["3-250", "4-250", "30-250"]):
+            continue
+        elif len(closest_freq) == 0:
             closest_freq.append("6")
             closest_freq.append(abs(float(target)-6))
         else:
@@ -376,18 +379,25 @@ def find_prn(target, sar_lab, date_prn):
     prn_dir = os.listdir("\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\{}\\{}\\prn data for (for importing to DASY medium parameters)\\Head\\{}".format(building, sar_lab, hsl_freq))
     found = 0
     count_days = 0
-    while found != 1 and count_days < 5:
+    
+    while found != 1 or count_days < 5:
         index_prnfolder = 0
         for prn in prn_dir:
             if date_prn in prn:
-                prn_file = prn_dir[index_prnfolder]
+                prn_found = prn_dir[index_prnfolder]
                 found = 1
+                break
             index_prnfolder += 1
-        date_prn = date_prn.split("-")
-        date_prn[2] = "{}".format(int(date_prn[2]) - 1)
-        date_prn = "-".join(date_prn)
-        count_days += 1    
-    prn_file = "\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\{}\\{}\\prn data for (for importing to DASY medium parameters)\\Head\\{}\\{}".format(building, sar_lab, hsl_freq, prn_file)
+        
+        if found == 1 or count_days >= 5:
+            break
+        
+        date_prn = dt.datetime.strptime(date_prn, "%Y-%b-%d")  
+        date_prn = date_prn - dt.timedelta(days=1)
+        date_prn = date_prn.strftime("%Y-%b-%d")
+        count_days += 1
+    
+    prn_file = "\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\{}\\{}\\prn data for (for importing to DASY medium parameters)\\Head\\{}\\{}".format(building, sar_lab, hsl_freq, prn_found)
     return(prn_file)
 
 # This function's purpose is to calculate the permittivity and conductivity of a particular target frequency.
@@ -1719,7 +1729,7 @@ while True:
             
             sar_lab = liquid_table[index][1] # Need SAR Lab to search for PRN file.
             
-            prn_file = find_prn(target, sar_lab, date_prn) # Get PRN file.
+            prn_file = find_prn(target, sar_lab, date_prn, months) # Get PRN file.
             
             try:
                 myfile = open(prn_file, "rt")
@@ -1730,7 +1740,10 @@ while True:
                 # NOTE: Permittivity is formatted - #.##, Conductivity is formatted - #.## or 0.###.
                 liquid_table[index].append("{}".format(round(float(rpermittivity), 1)))     # Add and format relative permittivity to table.
                 if conductivity[0] == "0":
-                    liquid_table[index].append("{}".format(round(float(conductivity), 3)))  # Add and format conductivity to table if the conductivity < 1.
+                    if len("{}".format(round(float(conductivity), 3))) < 5:
+                        liquid_table[index].append("{}0".format(round(float(conductivity), 3)))  # Add and format conductivity to table if the conductivity < 1.
+                    else:
+                        liquid_table[index].append("{}".format(round(float(conductivity), 3)))  # Add and format conductivity to table if the conductivity < 1.
                 elif len("{}".format(round(float(conductivity), 2))) == 3:                  
                     liquid_table[index].append("{}0".format(round(float(conductivity), 2))) # Add and format conductivity to table if the rounding only produces 2 digits.
                 else:
@@ -1748,7 +1761,6 @@ while True:
                     liquid_table[index].append("N")
             except:
                 continue
-                
         window['-liquid_table_1-'].update(values=liquid_table)
     elif event == "-compare-" and not window_compare:   
         window_compare = make_win3()

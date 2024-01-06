@@ -6,7 +6,7 @@ import datetime as dt
 from docx import *
 from copy import deepcopy
 # Program: Data_Checker.py
-# Version: 1.0.6
+# Version: 1.0.7
 # Description: This program is used in order to display data onto a GUI inorder for the data to be compared to see if they match or not.
 # Functions:
 #   (1) To read Excel sheets and Microsoft Documents.
@@ -16,13 +16,13 @@ from copy import deepcopy
 window = sg.FlexForm('Data Checker', default_button_element_size = (5,2), auto_size_buttons=False, grab_anywhere=False, resizable=False)
 
 # Column global variables.
-COL_HEADINGS = ["Plot #", "RF Exposure Condition", "Mode", "Test Position", "Ch #.", "Freq. (MHz)", "RB Allocation", "RB Offset", "Max Area (W/kg)", "1-g Meas. (W/kg)", "10-g Meas. (W/kg)"]
+COL_HEADINGS = ["Plot #", "RF Exposure Condition", "Mode", "Test Position", "Ch #.", "Freq. (MHz)", "RB Allocation", "RB Offset", "Max Area (W/kg)", "1-g Meas. (W/kg)", "10-g Meas. (W/kg)", "Peak SAR Location (x,y,z)", "Power Drift (dB)"]
 COL_HEADINGS_LIQUID = ["Plot #", "SAR Lab", "Date & Time", "Frequency (MHz)", "Permittivity on Plot", "Conductivity on Plot", "Permittivity on PRN", "Conductivity on PRN", "Match?"]
 COL_HEADINGS_COMPARATOR = ["Plot #", "RF Exposure Condition", "Mode", "Test Position",  "Match?", "If not, what is error?"]
 COL_HEADINGS_EQUIPMENT_PROBE =  ["Plot #", "SAR Lab", "Probe SN", "Probe Cal Date", "Probe Cal Due Date"]
 COL_HEADINGS_EQUIPMENT_DAE = ["Plot #", "SAR Lab", "DAE SN", "DAE Cal Date", "DAE Cal Due Date"]
 COL_HEADINGS_PWR_DRIFT = ["Plot #", "Power Drift (dB)", "Within ±0.2 dB?"]
-COL_WIDTHS = [len(COL_HEADINGS[0]), len(COL_HEADINGS[1])-4, len(COL_HEADINGS[2])+16, len(COL_HEADINGS[3]), len(COL_HEADINGS[4])+5, len(COL_HEADINGS[5]), len(COL_HEADINGS[6]), len(COL_HEADINGS[7]), len(COL_HEADINGS[8]), len(COL_HEADINGS[9]), len(COL_HEADINGS[10])]
+COL_WIDTHS = [len(COL_HEADINGS[0]), len(COL_HEADINGS[1])-4, len(COL_HEADINGS[2])+16, len(COL_HEADINGS[3]), len(COL_HEADINGS[4])+5, len(COL_HEADINGS[5]), len(COL_HEADINGS[6]), len(COL_HEADINGS[7]), len(COL_HEADINGS[8]), len(COL_HEADINGS[9]), len(COL_HEADINGS[10]), len(COL_HEADINGS[11]), len(COL_HEADINGS[12])]
 COL_WIDTHS_COMPARATOR = [len(COL_HEADINGS_COMPARATOR[0])-5, len(COL_HEADINGS_COMPARATOR[1])-4, len(COL_HEADINGS_COMPARATOR[2])+16, len(COL_HEADINGS_COMPARATOR[3])-5, len(COL_HEADINGS_COMPARATOR[4]), len(COL_HEADINGS_COMPARATOR[5])]
 COL_WIDTHS_EQUIPMENT = [len(COL_HEADINGS_EQUIPMENT_PROBE[0])-5, len(COL_HEADINGS_EQUIPMENT_PROBE[1]), len(COL_HEADINGS_EQUIPMENT_PROBE[2]), len(COL_HEADINGS_EQUIPMENT_PROBE[3]), len(COL_HEADINGS_EQUIPMENT_PROBE[4])]
 COL_WIDTHS_PWR_DRIFT = [len(COL_HEADINGS_PWR_DRIFT[index]) for index in range(0, len(COL_HEADINGS_PWR_DRIFT))]
@@ -77,7 +77,14 @@ def make_win1():
                           file_types=(("Excel Files", "*.xlsx"),),
                           size=BROWSE_BUTTON_SIZE,
                           font=BUTTON_FONT,
-                          tooltip="Choose the desired xlsx file that has the data.")],
+                          tooltip="Choose the desired xlsx file that has the data."),
+            sg.Text("Need Peak Location?:",
+                     size=CHOOSE_TEXT_SIZE,
+                     font=NORMAL_FONT),
+            sg.Combo(values=["Yes", "No"],
+                     key="-peak_sar-",
+                     size=(5,1),
+                     default_value="Yes")],
             
             # Once an excel is loaded, pick a sheet (technology) that will be parsed.
             [sg.Text("Pick a Technology:", 
@@ -201,7 +208,20 @@ def make_win1():
             sg.Text("",
                     key="-FuckedUp-",
                     size=(20,1),
-                    font=BUTTON_FONT)]  
+                    font=BUTTON_FONT)],
+            
+            [sg.Button("Hide/Unhide",
+                       key="-hide_unhide-",
+                       size=(12,1),
+                       font=BUTTON_FONT,
+                       button_color="white",
+                       auto_size_button=False,
+                       tooltip="Press to hide/unhide specified columns."),
+             sg.Combo(values=["Show all", "Only 1g/10g values", "No 1g/10g values"],
+                      default_value="",
+                      key="-hide_unhide_list-",
+                      size=(20,1),
+                      readonly=True)]
     ]
     return(sg.Window("Data Checker", layout, size=(1200,530), resizable=True, return_keyboard_events=True, location=(0,0), finalize=True))   # Display the window.
 
@@ -368,6 +388,9 @@ def find_prn(target, sar_lab, date_prn, months):
         elif len(closest_freq) == 0:
             closest_freq.append("6")
             closest_freq.append(abs(float(target)-6))
+        elif hsl[3:] == "5000" and (target >= 5000 and target < 6000):
+            closest_freq[0] = "5000"
+            break
         else:
             freq_distance = abs(float(target)-float(hsl[3:]))
             if freq_distance <= closest_freq[1]:
@@ -375,7 +398,7 @@ def find_prn(target, sar_lab, date_prn, months):
                 closest_freq[1] = freq_distance
     
     # Logic to get the correct PRN file. (NOTE: 4 days is the maximum days allowed for a valid liquid check).
-    hsl_freq = "HSL" + closest_freq[0]
+    hsl_freq = "HSL" + closest_freq[0]    
     prn_dir = os.listdir("\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\{}\\{}\\prn data for (for importing to DASY medium parameters)\\Head\\{}".format(building, sar_lab, hsl_freq))
     found = 0
     count_days = 0
@@ -397,12 +420,12 @@ def find_prn(target, sar_lab, date_prn, months):
         date_prn = date_prn.strftime("%Y-%b-%d")
         count_days += 1
     
-    prn_file = "\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\{}\\{}\\prn data for (for importing to DASY medium parameters)\\Head\\{}\\{}".format(building, sar_lab, hsl_freq, prn_found)
+    prn_file = "\\\\FREshares\\SAR\\5. Liquid Check (result and prn)\\{}\\{}\\prn data for (for importing to DASY medium parameters)\\Head\\{}\\{}".format(building, sar_lab, hsl_freq, prn_found)    
     return(prn_file)
 
 # This function's purpose is to calculate the permittivity and conductivity of a particular target frequency.
 def permcondCalcSolo(target, lines):
-    low_freq = target - (target % 5)      # Getting the 'low' freq from the target.
+    low_freq = target - (target % 5) - 5    # Getting the 'low' freq from the target.
     high_freq = target - (target % 5) + 5 # Getting the 'high' freq from the target.
     
     # Logic to get the relative permitivity and relative conductivity from .prn file.
@@ -413,7 +436,7 @@ def permcondCalcSolo(target, lines):
             rperm_cond_high = list((line.rstrip().split()[1],line.rstrip().split()[2]))
             break
     
-    if target < 20 or target > 6000: # The .prn file does not go below 20 MHz and above 6000 MHz.
+    if target < 20 or target > 7200: # The .prn file does not go below 20 MHz and above 7200 MHz.
         window['input_1'].update("N/A")
         window['input_2'].update("N/A")
         window['input_3'].update("N/A")    
@@ -428,9 +451,9 @@ def permcondCalcSolo(target, lines):
 
 # This function's purpose is to calculate the permittivity and conductivity so that it will be compared to the plot's data.
 def permcondCalcTable(target, lines):
-    low_freq = target - (target % 5)      # Getting the 'low' freq from the target.
+    low_freq = target - (target % 5) - 5    # Getting the 'low' freq from the target.
     high_freq = target - (target % 5) + 5 # Getting the 'high' freq from the target.
-    
+        
     # Logic to get the relative permitivity and relative conductivity from .prn file.
     for line in lines:
         if line.find(str(int(low_freq * pow(10,6)))) != -1:
@@ -439,7 +462,7 @@ def permcondCalcTable(target, lines):
             rperm_cond_high = list((line.rstrip().split()[1],line.rstrip().split()[2]))
             break
     
-    if target < 20 or target > 6000: # The .prn file does not go below 20 MHz and above 6000 MHz.
+    if target < 20 or target > 7200: # The .prn file does not go below 20 MHz and above 6000 MHz.
         rpermitivity = "N/A"
         conductivity = "N/A"  
     else:
@@ -522,7 +545,7 @@ def append_data(match_list, excel, plot):
             compare_list[index].append("No Error")
         
     return(match_list, compare_list)
-
+    
 xl = path = tech = ""
 data_excel = []
 data_plot = []
@@ -1038,19 +1061,18 @@ while True:
         
         try:
             # Put sheet names from Excel in list.
-            xl = pd.ExcelFile(path_excel).sheet_names
+            xl = pd.ExcelFile(path_excel)
+            xl_sheets = xl.sheet_names
         except:
             window["-Error_Technology-"].update("Please use an Excel file!")
             window["-FuckedUp-"].update("Dx")
-            
         for sheet_name in ['How to Use this Workbook', 'Inter-Band CA Exclusion', 'Settings', 'Sum of SAR',
-                           'Repeated', 'Data', 'Master List (WWAN)', 'List Variables', 'ISED Extremity']:
-            if sheet_name in xl:
-                xl.remove(sheet_name)
-
-        window["-tech_1-"].update(values = xl)
-
-    elif event == "Load Excel" and tech in xl and tech != "":
+                        'Repeated', 'Data', 'Master List (WWAN)', 'List Variables', 'ISED Extremity']:
+            if sheet_name in xl_sheets:
+                xl_sheets.remove(sheet_name)
+        window["-tech_1-"].update(values = xl_sheets)
+        xl.close()
+    elif event == "Load Excel" and tech != "":
         
         ref_df = pd.read_excel(path_excel, sheet_name=tech, index_col=None, na_values=['N/A'])
         ref_data = ref_df.values.tolist()
@@ -1064,7 +1086,7 @@ while True:
             elif ref_row[0] == "Repeated" and skip_rows != 0:
                 num_rows = count - 3
             count += 1
-                    
+
         del ref_df
         del ref_data
          
@@ -1103,16 +1125,16 @@ while True:
                     AE = 10-g Measured SAR
         '''
         if any(technology in tech for technology in ["GSM", "PCS", "W-CDMA"]):
-            cols = "I:J, M, U:V, Y, AA"
+            cols = "I:J, M, U:V, Y, AA, AC:AD"
             group = "GSM" if any(technology in tech for technology in ["GSM", "PCS"]) else "WCDMA"
-        elif any(technology in tech.lower() for technology in ["wlan", "wi-fi", "wifi",]):
-            cols = "I:J, N, O:P, AA, AD, AF"
+        elif any(technology in tech.lower() for technology in ["wlan", "wi-fi", "wifi", "u-nii",]):
+            cols = "I:J, N, O:P, AA, AD, AF, AH:AI"
             group = "WLAN"
         elif "LTE" in tech or "FR1" in tech:
-            cols = "I:J, M, W:Z, AC, AE"
+            cols = "I:J, M, W:Z, AC, AE, AG:AH"
             group = "LTE" if "LTE" in tech else "FR1"
         elif "Bluetooth" in tech:
-            cols = "I:J, N, O:P, AC, AE"
+            cols = "I:J, N, O:P, AC, AE, AG:AH"
             group = "Bluetooth"
         
         df = pd.read_excel(path_excel, sheet_name=tech, index_col=None, na_values=['N/A'], usecols="{}".format(cols), skiprows=skip_rows, nrows=num_rows) # Create a dataframe from the excel on the selected rows and columns.
@@ -1159,15 +1181,21 @@ while True:
             max_area_scan = 5                   # Assign the flag for max area scan to 5. (NOTE: Only applies to Wi-Fi, otherwise this is ignored).
             
             # Assigning the positions for measured 1-g and measured 10-g. These are dependent on the technology.
-            if "WLAN" in group:
+            if ("WLAN" or "U-NII") in group:
                 meas_1g = 6
                 meas_10g = 7
+                peak_sar = 8
+                power_drift = 9
             elif "LTE" in group or "FR1" in group:
                 meas_1g = 7
                 meas_10g = 8
+                peak_sar = 9
+                power_drift = 10
             else:
                 meas_1g = 5
                 meas_10g = 6
+                peak_sar = 7
+                power_drift = 8
             
             freq_ch_nrb_orb = [frequency_num, channel_num, num_rb, offset_rb]
             merge_variables = [merge_rf_exposure_condition, merge_mode, merge_test_position]                
@@ -1184,7 +1212,7 @@ while True:
                 for not_needed in [num_rb, offset_rb]:
                     freq_ch_nrb_orb.remove(not_needed)
                 meas_values.remove(max_area_scan)
-            elif any(technology in tech for technology in ["WLAN", "WiFi", "Wi-Fi", "Wi-fi"]): # NOTE: You'll notice that Wifi has the same code as GSM and WCDMA. This is because, if I wanted to add duty cycle, I would need an additional slot for that.
+            elif any(technology in tech for technology in ["WLAN", "WiFi", "Wi-Fi", "Wi-fi", "U-NII"]): # NOTE: You'll notice that Wifi has the same code as GSM and WCDMA. This is because, if I wanted to add duty cycle, I would need an additional slot for that.
                 for not_needed in [num_rb, offset_rb]:
                     freq_ch_nrb_orb.remove(not_needed)
             '''
@@ -1201,7 +1229,7 @@ while True:
                     Description: Insert the data for the frequency, channel, RB Allocation (if applicable), and RB Offset (if applicable).
                 3) Third 'if' statement:
                     Description: Insert the 1-g max area scan, 1-g and 10-g measured SAR data. (NOTE: Specifically, these number have to be rounded to THREE decimal places, and show only THREE decimal places).
-            '''
+            '''            
             for sublist_number in range(0, len(data[position])):
                 # Because of merged cells in the xlsx, the cells that are not at the top
                 # of the merged cell are considered "NaN" ("N/A" since these were filled). This solves that by replacing
@@ -1214,6 +1242,8 @@ while True:
                 # Round the "1-g Meas. (W/kg)" and "10-g Meas. (W/kg)" columns. (NOTE: Also rounds "Max Area (W/kg) column as well, if Wi-Fi")
                 elif sublist_number in meas_values and data[position][sublist_number] != "N/A":
                     data[position][sublist_number] = "{:.3f}".format(round(data[position][sublist_number], 3))
+                elif sublist_number == power_drift and data[position][sublist_number] != "N/A":
+                    data[position][sublist_number] = "{:.2f}".format(round(data[position][sublist_number], 2))
 
             # "N/A"'s will be inserted into certain column positions if certain technologies are being parsed.
             if any(technology in group for technology in ["WLAN", "WCDMA", "GSM", "Bluetooth"]):
@@ -1230,11 +1260,12 @@ while True:
         '''
         len_data = len(data)
         plot_number_tracker = 0 # Used to update the index after a pop has happened.
+        print(data)
         for index in range(0, len_data):
             index += plot_number_tracker
-            if (data[index][len(data[index])-2] == "N/A" or data[index][len(data[index])-1] == "N/A") and (data[index][len(data[index])-3] == "N/A"
-                                                                                                           or data[index][len(data[index])-3] == "nan" 
-                                                                                                           or pd.isna(data[index][len(data[index])-3])):  
+            if (data[index][len(data[index])-4] == "N/A" or data[index][len(data[index])-3] == "N/A") and (data[index][len(data[index])-5] == "N/A"
+                                                                                                           or data[index][len(data[index])-5] == "nan" 
+                                                                                                           or pd.isna(data[index][len(data[index])-5])):  
                 data.pop(index) # Remove current index that contains 'nan' on 1-g Meas or 10-g Meas.
                 len_data -= 1
                 plot_number_tracker -= 1
@@ -1255,6 +1286,8 @@ while True:
                 displaycolumns.remove('RB Offset')    
             if "WLAN" not in group:
                 displaycolumns.remove('Max Area (W/kg)')
+            if values['-peak_sar-'] == "No":
+                displaycolumns.remove('Peak SAR Location (x,y,z)')
             window['-data_table_1-'].ColumnsToDisplay = displaycolumns
             window['-data_table_2-'].ColumnsToDisplay = displaycolumns
             window['-data_table_1-'].Widget.configure(displaycolumns=displaycolumns)
@@ -1263,6 +1296,7 @@ while True:
             continue
                 
         window["-data_table_1-"].update(values = data)
+        xl.close()
         
     elif event == "Load Docx" and path_docx != "":
         window["-Error_Technology-"].update("")
@@ -1279,7 +1313,7 @@ while True:
         probe_table = []  # Initialize the list that will hold data for the probe.
         dae_table = []    # Initialize the list that will hold data for the DAE.
         liquid_table = [] # Initialize the list that will hold the data for the liquid checker window.
-        
+        peak_sar_temp = [] # Initialize a temp list for holding the peak SAR location.
         '''
             Notes about this section:
             The plots contains tables that contains the data that we need to parse. There are four tables with data that we can parse from.
@@ -1308,9 +1342,7 @@ while True:
             for table_num in range(start_of_tables, len(docx_tables), 4):
                 table = docx_tables[table_num]  # Define current table from docx.
                 
-                if start_of_tables == 2: # 'start_of_tables = 2' is the "Scan Setup" table on the plot. (NOTE: Unused).
-                    break
-                elif start_of_tables == 0: # 'start_of_tables = 0' is the "Exposure Conditions" table on the plot.
+                if start_of_tables == 0: # 'start_of_tables = 0' is the "Exposure Conditions" table on the plot.
                     split_freqch = (table.rows[1].cells[1].text).split()
                     permittivity = table.rows[0].cells[3].text                                    # Get relative permittivity.
                     conductivity = table.rows[1].cells[3].text                                    # Get conductivity.
@@ -1349,8 +1381,22 @@ while True:
                     
                     del split_probe_sncal   # Clear memory.
                     del split_dae_sncal     # Clear memory.
-                    
-                elif start_of_tables == 3: # 'start_of_tables = 3' is the "Measurement Results" table on the plot.
+                elif start_of_tables == 2: # 'start_of_tables = 2' is the "Scan Setup' table on the plot
+                    if len(table.rows[0].cells) == 2: # Only area scan case.
+                        peak_sar_temp.append("N/A")
+                    if len(table.rows[0].cells) == 3: # Only one zoom scan case.
+                        peak_sar = (table.rows[7].cells[2].text).split("|")[1]
+                        for replace in ['[', ']']:
+                            peak_sar = peak_sar.replace(replace,'')
+                        peak_sar_temp.append(peak_sar)
+                    if len(table.rows[0].cells) == 4: # Only two zoom scans case.
+                        first_peak = (table.rows[7].cells[2].text).split("|")[1]
+                        second_peak = (table.rows[7].cells[3].text).split("|")[1]
+                        for bracket in ['[', ']']:
+                            first_peak = first_peak.replace(bracket,'')
+                            second_peak = second_peak.replace(bracket,'')
+                        peak_sar_temp.append([first_peak, second_peak])
+                elif start_of_tables == 3:                                 # 'start_of_tables = 3' is the "Measurement Results" table on the plot.
                     max_area_scan_1g = table.rows[1].cells[1].text         # Get max area scan's measured 1-g (W/kg).
                     max_area_scan_10g = table.rows[2].cells[1].text        # Get max area scan's measured 10-g (W/kg).
                     if len(table.rows[0].cells) == 2:                      # A table length of '2' means that there is only an area scan value.
@@ -1368,26 +1414,53 @@ while True:
                         second_zoom_meas_1g = table.rows[1].cells[3].text  # Get second zoom scan's measured 1-g (W/kg).
                         second_zoom_meas_10g = table.rows[2].cells[3].text # Get second zoom scan's measured 10-g (W/kg).
                         second_power_drift = table.rows[3].cells[3].text   # Get second power drift (dB).
-                        
+                    
                         zoom_meas_1g = first_zoom_meas_1g if first_zoom_meas_1g > second_zoom_meas_1g else second_zoom_meas_1g      # Determines which 1-g measured zoom scan to use.
                         zoom_meas_10g = first_zoom_meas_10g if first_zoom_meas_10g > second_zoom_meas_10g else second_zoom_meas_10g # Determines which 10-g measured zoom scan to use.
-                        power_drift = first_power_drift if (first_zoom_meas_1g > second_zoom_meas_1g and first_zoom_meas_10g > second_zoom_meas_10g) else second_power_drift # 
                         
+                        # Determine which power drift to use from which zoom scan.
+                        if first_power_drift == "N/A" or second_power_drift == "N/A":
+                            power_drift = "N/A"
+                        else:
+                            if abs(float(first_power_drift)) > 0.20 and abs(float(second_power_drift)) > 0.20:
+                                power_drift = "0.20"
+                            elif first_zoom_meas_1g > second_zoom_meas_1g and first_zoom_meas_10g > second_zoom_meas_10g:
+                                power_drift = "0.20" if abs(float(first_power_drift)) > 0.20 else first_power_drift
+                            elif first_zoom_meas_1g < second_zoom_meas_1g and first_zoom_meas_10g < second_zoom_meas_10g:
+                                power_drift = "0.20" if abs(float(first_power_drift)) > 0.20 else second_power_drift
+                            else:
+                                power_drift = "N/A"
+                            
                     # Extend current sublist of 'table_1' with max area scan, 1-g measured, 10-g measured.
                     if sublist_start < len(main_table):
                         if "WLAN" in group:
                             main_table[sublist_start].extend(["{:.3f}".format(round(float(max_area_scan_1g), 3))])
                         
-                        if zoom_meas_1g != "N/A" and zoom_meas_10g != "N/A":
+                        if (zoom_meas_1g != "N/A" and zoom_meas_10g != "N/A") and (power_drift != "N/A"):
                             main_table[sublist_start].extend(["{:.3f}".format(round(float(zoom_meas_1g), 3)),
-                                                           "{:.3f}".format(round(float(zoom_meas_10g), 3))]) # NOTE: IF YOU WANT TO ADD POWER DRIFT, ADD 'power_drift' HERE.
+                                                           "{:.3f}".format(round(float(zoom_meas_10g), 3)),
+                                                           "{:.2f}".format(round(float(power_drift), 2))])
                         else:
-                            main_table[sublist_start].extend([zoom_meas_1g, zoom_meas_10g])
+                            main_table[sublist_start].extend([zoom_meas_1g, zoom_meas_10g, power_drift])
                     sublist_start += 1
-
             sublist_start = 0
             start_of_tables += 1
 
+        # Add the peak sar location onto the main table list.
+        sublist_start = 0
+        for curr_peak in peak_sar_temp:         
+            if type(curr_peak) is str:
+                main_table[sublist_start].insert(len(main_table[sublist_start])-1, curr_peak)
+            elif type(curr_peak) is list:
+                if main_table[sublist_start][len(main_table[sublist_start])-3] > main_table[sublist_start][len(main_table[sublist_start])-2]:
+                    main_table[sublist_start].insert(len(main_table[sublist_start])-1, curr_peak[0])
+                elif main_table[sublist_start][len(main_table[sublist_start])-3] < main_table[sublist_start][len(main_table[sublist_start])-2]:
+                    main_table[sublist_start].insert(len(main_table[sublist_start])-1, curr_peak[0])
+                else:
+                    main_table[sublist_start].insert(len(main_table[sublist_start])-1, curr_peak[0])
+            else:
+                main_table[sublist_start].insert(len(main_table[sublist_start])-1, "N/A")
+            sublist_start += 1
         '''
             Notes about this section:
             This for-loop will iterate through each of the paragraphs of the plot in order to get the following information and place them in a 2D list for the PySimpleGUI table:
@@ -1675,9 +1748,11 @@ while True:
             displaycolumns = deepcopy(COL_HEADINGS) # Creating a deepcopy as to not override the original.
             if any(technology in group for technology in ["GSM", "WCDMA", "WLAN", "Bluetooth"]):
                 displaycolumns.remove('RB Allocation')
-                displaycolumns.remove('RB Offset')    
+                displaycolumns.remove('RB Offset')
             if "WLAN" not in group:
                 displaycolumns.remove('Max Area (W/kg)')
+            if values["-peak_sar-"] == "No":
+                displaycolumns.remove('Peak SAR Location (x,y,z)')
             window['-data_table_1-'].ColumnsToDisplay = displaycolumns
             window['-data_table_2-'].ColumnsToDisplay = displaycolumns
             window['-data_table_1-'].Widget.configure(displaycolumns=displaycolumns)
@@ -1695,6 +1770,25 @@ while True:
     #     print(values["-data_table_2-"])
     # NOTE: !!!!!!!!!!! OPTIONAL: If I have the time and willpower, try to figure this section out !!!!!!!!!!!
     
+    elif event == '-hide_unhide-' and values["-hide_unhide_list-"] != "":
+        value = values["-hide_unhide_list-"]
+        flag = 0
+        
+        displaycolumns = deepcopy(COL_HEADINGS) # Creating a deepcopy as to not override the original.
+        if value == "Only 1g/10g values":
+            for i in (list(set(COL_HEADINGS)-set(['Plot #', 'Max Area (W/kg)', '1-g Meas. (W/kg)', '10-g Meas. (W/kg)', 'Peak SAR Location (x,y,z)', 'Power Drift (dB)']))):
+                displaycolumns.remove(i)
+        elif value == "No 1g/10g values":
+            for i in (list(set(COL_HEADINGS)-set(['Plot #', 'RF Exposure Condition', 'Mode', 'Test Position', 'Ch #.', 'Freq. (MHz)', 'RB Allocation', 'RB Offset']))):
+                displaycolumns.remove(i)
+        else:
+            displaycolumns = deepcopy(COL_HEADINGS)
+        window['-data_table_1-'].ColumnsToDisplay = displaycolumns
+        window['-data_table_2-'].ColumnsToDisplay = displaycolumns
+        window['-data_table_1-'].Widget.configure(displaycolumns=displaycolumns)
+        window['-data_table_2-'].Widget.configure(displaycolumns=displaycolumns)
+        
+        
     # Open the liquid check window if it has not been opened already.
     elif event == '-liquid_check-' and not window_liquid:
         window_liquid = make_win2()
@@ -1794,7 +1888,7 @@ while True:
         # Display text to user if a step was performed before a certain other step.
         if event == "Load" or (event == "Load Excel" and path == ""):
             error = "Please load an excel file."
-        elif event == "Load Excel" and tech == "":
+        elif event == "Load Excel" and (tech == "" or values["-tech_1-"] == ""):
             error = "Please load a technology."
         elif event == "Load Docx" and path_docx == "":
             error = "Please load a docx file."

@@ -1,12 +1,18 @@
 # Data-Comparator
 
-**Version: 1.0.6**
+**Version: 1.0.7**
 
 Changelog:
 
+Main Window: 
+- Added the following parameters to both tables:
+  - Peak SAR Location (x,y,z)
+  - Power Drift (dB)
+- Added a dropdown list asking whether Peak SAR Location is needed or not.
+- Added a button to hide/unhide certain columns in both tables.
+
 Liquid Checker:
-- Updated the logic in getting the PRN file.
-  - It should now get the correct PRN file for ALL cases, provided that the liquid check folder is not tampered with.
+- Updated the logic for both the single use and plot liquid checker to account for Wi-Fi 6E.
 
 ----
 
